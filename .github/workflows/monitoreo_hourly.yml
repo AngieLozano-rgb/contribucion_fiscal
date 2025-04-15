@@ -21,13 +21,6 @@ jobs:
           Rscript -e 'install.packages("pacman")'
           Rscript -e 'pacman::p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2, httr, haven, jsonlite, kableExtra, labelled, lubridate, purrr, skimr, stringr, tidyverse, tidyr, tidygeocoder, readxl, writexl)'
 
-      - name: Cargar credenciales de Google
-        env:
-          GARGLE_AUTH_FILE: ${{ secrets.GARGLE_AUTH_FILE }}
-        run: |
-          mkdir -p secrets
-          echo "$GARGLE_AUTH_FILE" > secrets/gargle-oauth.json
-
       - name: Ejecutar script 0_Importar_datos
         run: Rscript 0_Importar_datos.R
 
