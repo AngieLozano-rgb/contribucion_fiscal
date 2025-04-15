@@ -42,6 +42,3 @@ jobs:
 
       - name: Run Script 2_Labels
         run: Rscript 2_Labels.R
-
-      - name: Run Script 3_Monitoreo
-        run: Rscript 3_Monitoreo.R
