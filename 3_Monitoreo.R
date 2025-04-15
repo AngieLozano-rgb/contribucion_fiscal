@@ -94,8 +94,8 @@ id_dashboard <- "1AUFxK7Xj7GrYHjA7SgcGfrunvp13CTx3Kwv8V5GOWKk"
 
 contribucion_fiscal_audit_dashboard <- data
 
-contribucion_fiscal_audit_dashboard <- contribucion_fiscal_audit_dashboard %>%
-  select(-c(`_attachments`, `_geolocation`, `_tags`, `_notes`))
+#contribucion_fiscal_audit_dashboard <- contribucion_fiscal_audit_dashboard %>%
+#  select(-c(`_attachments`, `_geolocation`, `_tags`, `_notes`))
 
 # Escribir datos en una hoja específica
 sheet_write(

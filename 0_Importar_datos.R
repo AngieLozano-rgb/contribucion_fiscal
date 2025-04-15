@@ -60,6 +60,15 @@ if (status_code(data) == 200) {
 data <- data %>%
     filter(id_encuestador != "E999")
 
+# Ejemplo para convertir columnas tipo 'list' a cadenas de texto
+data <- data.frame(lapply(data, function(col) {
+  if (is.list(col)) {
+    return(sapply(col, toString))
+  } else {
+    return(col)
+  }
+}))
+
 # Paso 8: Guardar en múltiples formatos ---------------------------------------------
   ruta <- paste0("1_Crudas/contribucion_fiscal_cruda_", Sys.Date())
   
