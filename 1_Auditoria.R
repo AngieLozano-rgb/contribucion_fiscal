@@ -259,3 +259,7 @@ write_xlsx(data, path = paste0(ruta, ".xlsx"), col_names = TRUE)
 
 ## CSV
 write.csv(data, file = paste0(ruta, ".csv"), row.names = FALSE)
+
+# Limpieza del entorno ----------------------------------------------------------
+rm(list = ls())
+

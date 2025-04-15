@@ -9,455 +9,531 @@ p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven,
 
 load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
 
-
 # Poner Labels a las varnames y las respuestas ---------------------------------------------
 
 ## Asignación de val_labels para todas las variables ##
 
-## a0: Ciudad de residencia ##
-data$a0 <- case_when(
-  data$a0 == "1" ~ "AMBATO",
-  data$a0 == "2" ~ "CUENCA",
-  data$a0 == "3" ~ "CUMBAYÁ",
-  data$a0 == "4" ~ "GUARANDA",
-  data$a0 == "5" ~ "GUAYAQUIL",
-  data$a0 == "6" ~ "HUAQUILLAS",
-  data$a0 == "7" ~ "JOSÉ LUIS TAMAYO",
-  data$a0 == "8" ~ "LA MANÁ",
-  data$a0 == "9" ~ "MACHALA",
-  data$a0 == "10" ~ "MANTA",
-  data$a0 == "11" ~ "MONTECRISTI",
-  data$a0 == "12" ~ "NARANJAL",
-  data$a0 == "13" ~ "NARANJITO",
-  data$a0 == "14" ~ "QUITO",
-  data$a0 == "15" ~ "SAN MIGUEL DE IBARRA",
-  data$a0 == "16" ~ "SANGOLQUÍ",
-  data$a0 == "17" ~ "SANTA ROSA",
-  data$a0 == "18" ~ "VENTANAS",
-  TRUE ~ data$a0
-)
-
-## Variables Sí/No (1=Sí, 2=No) ##
-sino_vars <- c("a1", "a2", "a4", "a6", "c7_1", "d5", "e_v9", "e_r1", 
-               "gasto_alimentacion", "gasto_bebidas", "gasto_transporte", 
-               "gasto_vivienda", "gasto_mensuales", "h1", "h4")
-
-for(var in sino_vars) {
-  data[[var]] <- case_when(
-    data[[var]] == "1" ~ "Sí",
-    data[[var]] == "2" ~ "No",
-    TRUE ~ data[[var]]
+data$id_encuestador <- labelled(as.integer(data$id_encuestador), labels = c(
+  `Carmen Mora` = 1,
+  `Mejías Yonattan` = 2,
+  `Kenia Inaudi` = 3,
+  `Katherine Oropesa` = 4,
+  `María Isabel Cabrera` = 5,
+  `Contreras Leslie` = 6,
+  `Castro Ailing` = 7,
+  `Vanessa Chaparro` = 8,
+  `Acasio Yanez Angélica María` = 9,
+  `Sanchez Dayleth` = 10,
+  `Valente Fabioly` = 11,
+  `Laura Perez` = 12,
+  `Yarit Rodriguez` = 13,
+  `Marlene Velasquez` = 14,
+  `Carolina Zambrano` = 15,
+  `Bencomo Valero Maite Astrid Carolina` = 16,
+  `Gonzalez Ivan` = 17,
+  `Mendoza Claireth` = 18,
+  `Osal Reismeris` = 19,
+  `Shera Valera` = 20,
+  `Noraima Ruiz` = 21,
+  `Gervis Lascano` = 22,
+  `Encuestador Naranjito` = 23,
+  `Stephany Rincon` = 24,
+  `Encuestador La Libertad` = 25,
+  `Marjoorie Lucas` = 26,
+  `Encuestador Los Ríos` = 27,
+  `Encuestador Guaranda` = 28,
+  `Encuestador Machala` = 29,
+  `Julie Morales` = 30
   )
-}
+)
 
-## a3, c3: País de origen ##
-for(var in c("a3", "c3")) {
-  data[[var]] <- case_when(
-    data[[var]] == "1" ~ "Venezuela",
-    data[[var]] == "2" ~ "Ecuador",
-    data[[var]] == "88" ~ "Otro (especificar)",
-    TRUE ~ data[[var]]
+data$a0 <- labelled(as.integer(data$a0), labels = c(
+  `AMBATO` = 1,
+  `CUENCA` = 2,
+  `CUMBAYÁ` = 3,
+  `GUARANDA` = 4,
+  `GUAYAQUIL` = 5,
+  `HUAQUILLAS` = 6,
+  `JOSÉ LUIS TAMAYO` = 7,
+  `LA MANÁ` = 8,
+  `MACHALA` = 9,
+  `MANTA` = 10,
+  `MONTECRISTI` = 11,
+  `NARANJAL` = 12,
+  `NARANJITO` = 13,
+  `QUITO` = 14,
+  `SAN MIGUEL DE IBARRA` = 15,
+  `SANGOLQUÍ` = 16,
+  `SANTA ROSA` = 17,
+  `VENTANAS` = 18
   )
-}
-
-## a5: Tiempo en Ecuador ##
-data$a5 <- case_when(
-  data$a5 == "1" ~ "Menos de 6 meses",
-  data$a5 == "2" ~ "Entre 7 meses y un año",
-  data$a5 == "3" ~ "Entre 1 y 3 años",
-  data$a5 == "4" ~ "Más de 3 años",
-  TRUE ~ data$a5
 )
 
-## c1: Género ##
-data$c1 <- case_when(
-  data$c1 == "1" ~ "Hombre",
-  data$c1 == "2" ~ "Mujer",
-  data$c1 == "88" ~ "Otro",
-  data$c1 == "99" ~ "Prefiere no responder",
-  TRUE ~ data$c1
-)
-
-## c5: Parentesco en el hogar ##
-data$c5 <- case_when(
-  data$c5 == "1" ~ "Jefe/a de hogar",
-  data$c5 == "2" ~ "Cónyuge o conviviente",
-  data$c5 == "3" ~ "Hija o hijo",
-  data$c5 == "4" ~ "Hijastra o hijastro",
-  data$c5 == "5" ~ "Nuera o yerno",
-  data$c5 == "6" ~ "Nieta o nieto",
-  data$c5 == "7" ~ "Padres o suegros",
-  data$c5 == "8" ~ "Otro pariente",
-  data$c5 == "9" ~ "Otro no pariente",
-  data$c5 == "10" ~ "Trabajador/a doméstica/o",
-  data$c5 == "11" ~ "Miembro de hogar colectivo",
-  TRUE ~ data$c5
-)
-
-## c6: Nivel educativo ##
-data$c6 <- case_when(
-  data$c6 == "1" ~ "Primaria",
-  data$c6 == "2" ~ "Secundaria (educación básica)",
-  data$c6 == "3" ~ "Secundaria (bachillerato)",
-  data$c6 == "4" ~ "Técnico superior incompleto",
-  data$c6 == "5" ~ "Técnico superior completo",
-  data$c6 == "6" ~ "Universitario incompleto",
-  data$c6 == "7" ~ "Universitario completo",
-  data$c6 == "8" ~ "Maestría",
-  data$c6 == "9" ~ "Doctorado",
-  data$c6 == "10" ~ "Ninguno",
-  TRUE ~ data$c6
-)
-
-## c7: Lugar de estudios ##
-data$c7 <- case_when(
-  data$c7 == "1" ~ "En Ecuador",
-  data$c7 == "2" ~ "En Venezuela",
-  data$c7 == "3" ~ "En otro país",
-  TRUE ~ data$c7
-)
-
-## c8: Documentos de identidad ##
-data$c8 <- case_when(
-  data$c8 == "1" ~ "Pasaporte venezolano vigente",
-  data$c8 == "2" ~ "Pasaporte venezolano vencido",
-  data$c8 == "3" ~ "Cédula de identidad venezolana vigente",
-  data$c8 == "4" ~ "Cédula de identidad venezolana vencido",
-  data$c8 == "5" ~ "Cédula de identidad ecuatoriana para extranjeros vigente",
-  data$c8 == "6" ~ "Cédula de identidad ecuatoriana para extranjeros vencido",
-  data$c8 == "7" ~ "Carnet de Extranjería (Vigente)",
-  data$c8 == "8" ~ "Carnet de Extranjería (Vencido)",
-  data$c8 == "9" ~ "Visa VIRTE (Vencida)",
-  data$c8 == "10" ~ "Visa VIRTE (Vigente)",
-  data$c8 == "11" ~ "Visa Mercosur (PTP) (Vigente)",
-  data$c8 == "12" ~ "Visa Mercosur (PTP) (Vencido)",
-  data$c8 == "14" ~ "No cuenta con ningún documento",
-  data$c8 == "99" ~ "Prefiere no responder",
-  TRUE ~ data$c8
-)
-
-## c9: Intención de migración ##
-data$c9 <- case_when(
-  data$c9 == "1" ~ "Sí, a Venezuela",
-  data$c9 == "2" ~ "Sí, a un país de Latinoamérica",
-  data$c9 == "3" ~ "Sí, a un país de Europa, América del Norte u otro",
-  data$c9 == "4" ~ "No tengo intención de abandonar Ecuador próximamente",
-  TRUE ~ data$c9
-)
-
-## d1: Situación laboral ##
-data$d1 <- case_when(
-  data$d1 == "1" ~ "Trabaja (por cuenta propia, para un empleador o es generador de empleo)",
-  data$d1 == "2" ~ "Desempleado/a (buscando trabajo)",
-  data$d1 == "3" ~ "Estudiante",
-  data$d1 == "4" ~ "Amo/a de casa",
-  data$d1 == "5" ~ "Jubilado/a",
-  data$d1 == "6" ~ "Incapacitado/a para trabajar",
-  TRUE ~ data$d1
-)
-
-## d2: Tipo de empleo ##
-data$d2 <- case_when(
-  data$d2 == "1" ~ "Empleada/o u obrera/o privado",
-  data$d2 == "2" ~ "Empleada/o u obrera/o del Estado, Gobierno, Municipio, Consejo Provincial, Junta Parroquial",
-  data$d2 == "3" ~ "Jornalera/o o peón",
-  data$d2 == "4" ~ "Empleada/o doméstica/o",
-  data$d2 == "5" ~ "Patrona/o",
-  data$d2 == "6" ~ "Cuenta propia",
-  data$d2 == "7" ~ "Socia/o",
-  data$d2 == "8" ~ "Trabajadora/or familiar no remunerada/o",
-  TRUE ~ data$d2
-)
-
-## d3: Sector económico ##
-data$d3 <- case_when(
-  data$d3 == "1" ~ "Agricultura, ganadería, silvicultura y pesca",
-  data$d3 == "2" ~ "Explotación de minas y canteras",
-  data$d3 == "3" ~ "Industrias manufactureras",
-  data$d3 == "4" ~ "Suministro de electricidad, gas, vapor y aire acondicionado",
-  data$d3 == "5" ~ "Distribución de agua; alcantarillado; gestión de desechos y actividades de saneamiento",
-  data$d3 == "6" ~ "Construcción",
-  data$d3 == "7" ~ "Comercio al por mayor y al por menor; reparación de vehículos automotores y motocicletas",
-  data$d3 == "8" ~ "Transporte y almacenamiento",
-  data$d3 == "9" ~ "Actividades de alojamiento y de servicio de comidas",
-  data$d3 == "10" ~ "Información y comunicación",
-  data$d3 == "11" ~ "Actividades financieras y de seguros",
-  data$d3 == "12" ~ "Actividades inmobiliarias",
-  data$d3 == "13" ~ "Actividades profesionales, científicas y técnicas",
-  data$d3 == "14" ~ "Actividades de servicios administrativos y de apoyo",
-  data$d3 == "15" ~ "Administración pública y defensa; planes de seguridad social de afiliación obligatoria",
-  data$d3 == "16" ~ "Enseñanza",
-  data$d3 == "17" ~ "Actividades de atención de la salud humana y de asistencia social",
-  data$d3 == "18" ~ "Artes, entretenimiento y recreación",
-  data$d3 == "19" ~ "Otras actividades de servicios",
-  data$d3 == "20" ~ "Actividades de los hogares como empleadores",
-  data$d3 == "21" ~ "Actividades de organizaciones y órganos extraterritoriales",
-  data$d3 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$d3
-)
-
-## d6: Tipo de seguro de salud ##
-data$d6 <- case_when(
-  data$d6 == "1" ~ "IESS, Seguro general",
-  data$d6 == "2" ~ "IESS, Seguro voluntario",
-  data$d6 == "3" ~ "IESS, Seguro campesino",
-  data$d6 == "4" ~ "Seguro del ISSFA o ISSPOL",
-  data$d6 == "5" ~ "No aporta, es Jubilada/o del IESS / ISSFA / ISSPOL",
-  data$d6 == "6" ~ "Seguro de salud privado",
-  data$d6 == "7" ~ "Seguro de salud público (IESS) y privado",
-  data$d6 == "8" ~ "Ninguno",
-  TRUE ~ data$d6
-)
-
-## ind2: Registro tributario ##
-data$ind2 <- case_when(
-  data$ind2 == "1" ~ "Registro Único de Contribuyentes (RUC) en el SRI",
-  data$ind2 == "2" ~ "Inscripción en régimen tributario (General o RIMPE)",
-  data$ind2 == "3" ~ "Prestación de servicios profesionales: emite facturas, no tiene relación de dependencia",
-  data$ind2 == "5" ~ "Ninguna, el negocio o empresa no está registrado formalmente",
-  data$ind2 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$ind2
-)
-
-## ind3: Tipo de empresa ##
-data$ind3 <- case_when(
-  data$ind3 == "1" ~ "Unipersonal",
-  data$ind3 == "2" ~ "Negocio familiar",
-  data$ind3 == "3" ~ "Microempresa (entre 1 y 9 trabajadores)",
-  data$ind3 == "4" ~ "Pequeña empresa (entre 10 y 49 trabajadores)",
-  data$ind3 == "5" ~ "Mediana empresa (entre 50 y 199 trabajadores)",
-  TRUE ~ data$ind3
-)
-
-## ind6, dep5: Declaración de impuestos ##
-for(var in c("ind6", "dep5")) {
-  data[[var]] <- case_when(
-    data[[var]] == "1" ~ "Si, ya hizo la declaración",
-    data[[var]] == "2" ~ "Si, piensa hacerlo",
-    data[[var]] == "3" ~ "No, hará la declaración",
-    data[[var]] == "4" ~ "No, no está obligado/a a presentar declaración de impuestos",
-    TRUE ~ data[[var]]
+data$a1 <- labelled(as.integer(data$a1), labels = c(
+  `Sí` = 1,
+  `No` = 2
   )
-}
-
-## dep1: Ocupación laboral ##
-data$dep1 <- case_when(
-  data$dep1 == "1" ~ "Ocupaciones militares",
-  data$dep1 == "2" ~ "Directores y gerentes",
-  data$dep1 == "3" ~ "Profesionales científicos e intelectuales",
-  data$dep1 == "4" ~ "Técnicos y profesionales del nivel medio",
-  data$dep1 == "5" ~ "Personal de apoyo administrativo",
-  data$dep1 == "6" ~ "Trabajadores de los servicios y vendedores de comercios y mercados",
-  data$dep1 == "7" ~ "Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros",
-  data$dep1 == "8" ~ "Oficiales, operarios y artesanos de artes mecánicas y de otros oficios",
-  data$dep1 == "9" ~ "Operadores de instalaciones y máquinas y ensambladores",
-  data$dep1 == "10" ~ "Ocupaciones elementales",
-  data$dep1 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$dep1
 )
 
-## dep2: Tipo de contrato ##
-data$dep2 <- case_when(
-  data$dep2 == "1" ~ "Contrato indefinido: No tiene fecha de finalización",
-  data$dep2 == "2" ~ "Contrato a plazo fijo: Tiene una duración máxima de 2 años, renovable una vez",
-  data$dep2 == "3" ~ "Contrato eventual: Para trabajos temporales o extraordinarios, máximo 6 meses en un año",
-  data$dep2 == "4" ~ "Contrato por obra o servicio determinado: Finaliza cuando se completa una tarea específica",
-  data$dep2 == "5" ~ "Contrato de jornada parcial permanente: Para quienes trabajan menos de 40 horas semanales, con beneficios proporcionales",
-  data$dep2 == "6" ~ "Contrato de aprendizaje/pasantía: Para estudiantes o aprendices con una duración máxima de 6 meses",
-  data$dep2 == "7" ~ "Contrato agropecuario: Para trabajadores en el sector agrícola con condiciones especiales",
-  data$dep2 == "9" ~ "Trabajo sin contrato, compromiso de boca",
-  data$dep2 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$dep2
+data$a2 <- labelled(as.integer(data$a2), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
 )
 
-## dep4: Beneficios laborales ##
-data$dep4 <- case_when(
-  data$dep4 == "1" ~ "Bono de alimentación",
-  data$dep4 == "2" ~ "Transporte",
-  data$dep4 == "3" ~ "13er sueldo",
-  data$dep4 == "4" ~ "14to sueldo",
-  data$dep4 == "5" ~ "Utilidades",
-  data$dep4 == "6" ~ "Bonificaciones o incentivos (bonos por desempeño, productividad, antigüedad, etc.)",
-  data$dep4 == "7" ~ "Comisiones sobre ventas o producción",
-  data$dep4 == "8" ~ "Horas extras pagadas",
-  data$dep4 == "9" ~ "No cuenta con beneficios adicionales",
-  data$dep4 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$dep4
+data$a3 <- labelled(as.integer(data$a3), labels = c(
+  `Venezuela` = 1,
+  `Ecuador` = 2,
+  `Otro (especificar)` = 88
+  )
 )
 
-## e_t3: Medio de transporte ##
-data$e_t3 <- case_when(
-  data$e_t3 == "1" ~ "Automóvil o camioneta",
-  data$e_t3 == "2" ~ "Motocicleta",
-  data$e_t3 == "3" ~ "Bicicleta",
-  data$e_t3 == "4" ~ "Ninguno",
-  data$e_t3 == "88" ~ "Otro medio de transporte",
-  TRUE ~ data$e_t3
+data$a4 <- labelled(as.integer(data$a4), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
 )
 
-## e_v1: Tenencia de vivienda ##
-data$e_v1 <- case_when(
-  data$e_v1 == "1" ~ "Propia y totalmente pagada",
-  data$e_v1 == "2" ~ "Propia y la está pagando",
-  data$e_v1 == "3" ~ "Propia (regalada, donada, heredada o por posesión)",
-  data$e_v1 == "4" ~ "Arrendada/anticresis",
-  data$e_v1 == "5" ~ "Prestada o cedida (no paga)",
-  data$e_v1 == "6" ~ "Por servicios",
-  TRUE ~ data$e_v1
+data$a5 <- labelled(as.integer(data$a5), labels = c(
+  `Menos de 6 meses` = 1,
+  `Entre 7 meses y un año` = 2,
+  `Entre 1 y 3 años` = 3,
+  `Más de 3 años` = 4
+  )
 )
 
-## e_v4: Material de techo ##
-data$e_v4 <- case_when(
-  data$e_v4 == "1" ~ "Hormigón (losa, cemento)",
-  data$e_v4 == "2" ~ "Fibrocemento, asbesto (eternit, eurolit)",
-  data$e_v4 == "3" ~ "Zinc, aluminio (lámina o plancha metálica)",
-  data$e_v4 == "4" ~ "Teja",
-  data$e_v4 == "5" ~ "Palma, paja u hoja",
-  data$e_v4 == "88" ~ "Otro material",
-  TRUE ~ data$e_v4
+data$a6 <- labelled(as.integer(data$a6), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
 )
 
-## e_v5: Material de paredes ##
-data$e_v5 <- case_when(
-  data$e_v5 == "1" ~ "Hormigón",
-  data$e_v5 == "2" ~ "Ladrillo o bloque",
-  data$e_v5 == "3" ~ "Panel prefabricado (yeso, fibrocemento, etc.)",
-  data$e_v5 == "4" ~ "Adobe o tapia",
-  data$e_v5 == "5" ~ "Madera",
-  data$e_v5 == "6" ~ "Caña revestida o bahareque",
-  data$e_v5 == "7" ~ "Caña no revestida",
-  data$e_v5 == "88" ~ "Otro material",
-  TRUE ~ data$e_v5
+data$c1 <- labelled(as.integer(data$c1), labels = c(
+  `Hombre` = 1,
+  `Mujer` = 2,
+  `Otro` = 88,
+  `Prefiere no responder` = 99
+  )
 )
 
-## e_v6: Material de piso ##
-data$e_v6 <- case_when(
-  data$e_v6 == "1" ~ "Duela, parquet, tablón o piso flotante",
-  data$e_v6 == "2" ~ "Cerámica, baldosa, vinil o porcelanato",
-  data$e_v6 == "3" ~ "Mármol o marmetón",
-  data$e_v6 == "4" ~ "Ladrillo o cemento",
-  data$e_v6 == "5" ~ "Tabla sin tratar",
-  data$e_v6 == "6" ~ "Caña sin tratar",
-  data$e_v6 == "7" ~ "Tierra",
-  data$e_v6 == "88" ~ "Otro material",
-  TRUE ~ data$e_v6
+data$c3 <- labelled(as.integer(data$c3), labels = c(
+  `Venezuela` = 1,
+  `Ecuador` = 2,
+  `Otro (especificar)` = 88
+  )
 )
 
-## e_v7: Abastecimiento de agua ##
-data$e_v7 <- case_when(
-  data$e_v7 == "1" ~ "Por tubería, dentro de la vivienda",
-  data$e_v7 == "2" ~ "Por tubería, fuera de la vivienda pero dentro del edificio, lote o terreno",
-  data$e_v7 == "3" ~ "Por tubería, fuera del edificio, lote o terreno",
-  data$e_v7 == "4" ~ "No recibe agua por tubería, sino por otros medios",
-  TRUE ~ data$e_v7
+data$c5 <- labelled(as.integer(data$c5), labels = c(
+  `Jefe/a de hogar` = 1,
+  `Cónyuge o conviviente` = 2,
+  `Hija o hijo` = 3,
+  `Hijastra o hijastro` = 4,
+  `Nuera o yerno` = 5,
+  `Nieta o nieto` = 6,
+  `Padres, madres o suegros/as` = 7,
+  `Otro pariente` = 8,
+  `Otro no pariente` = 9,
+  `Trabajador/a doméstica/o` = 10,
+  `Miembro de hogar colectivo` = 11
+  )
 )
 
-## e_v8: Servicio sanitario ##
-data$e_v8 <- case_when(
-  data$e_v8 == "1" ~ "Inodoro o escusado, conectado a red pública de alcantarillado",
-  data$e_v8 == "2" ~ "Inodoro o escusado, conectado a pozo séptico",
-  data$e_v8 == "3" ~ "Inodoro o escusado, conectado a biodigestor",
-  data$e_v8 == "4" ~ "Inodoro o escusado, conectado a pozo ciego",
-  data$e_v8 == "5" ~ "Inodoro o escusado, con descarga directa al mar, río, lago o quebrada",
-  data$e_v8 == "6" ~ "Letrina",
-  data$e_v8 == "7" ~ "No tiene",
-  TRUE ~ data$e_v8
+data$c6 <- labelled(as.integer(data$c6), labels = c(
+  `Primaria` = 1,
+  `Secundaria (educación básica)` = 2,
+  `Secundaria (bachillerato)` = 3,
+  `Técnico superior incompleto` = 4,
+  `Técnico superior completo` = 5,
+  `Universitario incompleto` = 6,
+  `Universitario completo` = 7,
+  `Maestría` = 8,
+  `Doctorado` = 9,
+  `Ninguno` = 10
+  )
 )
 
-## e_v10: Eliminación de basura ##
-data$e_v10 <- case_when(
-  data$e_v10 == "1" ~ "Por carro recolector",
-  data$e_v10 == "2" ~ "Por contenedor municipal",
-  data$e_v10 == "3" ~ "La arroja en terreno baldío",
-  data$e_v10 == "4" ~ "La quema",
-  data$e_v10 == "5" ~ "La entierra",
-  data$e_v10 == "6" ~ "La arroja al río, acequia, canal o quebrada",
-  data$e_v10 == "7" ~ "De otra forma",
-  TRUE ~ data$e_v10
+data$c7 <- labelled(as.integer(data$c7), labels = c(
+  `En Ecuador` = 1,
+  `En Venezuela` = 2,
+  `En otro país` = 3
+  )
 )
 
-## e_v11: Combustible para cocinar ##
-data$e_v11 <- case_when(
-  data$e_v11 == "1" ~ "Gas de tanque o cilindro",
-  data$e_v11 == "2" ~ "Gas centralizado (por tubería)",
-  data$e_v11 == "3" ~ "Electricidad",
-  data$e_v11 == "4" ~ "Leña o carbón",
-  data$e_v11 == "5" ~ "Biogás (residuos vegetales y/o animales, etc.)",
-  data$e_v11 == "7" ~ "Ninguno (no cocina)",
-  data$e_v11 == "88" ~ "Otro (Ej: gasolina, kerex, diésel, etc.)",
-  TRUE ~ data$e_v11
+data$c7_1 <- labelled(as.integer(data$c7_1), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
 )
 
-## e_v13: Bienes del hogar ##
-data$e_v13 <- case_when(
-  data$e_v13 == "1" ~ "Servicio de teléfono convencional",
-  data$e_v13 == "2" ~ "Servicio de teléfono celular",
-  data$e_v13 == "3" ~ "Servicio de televisión pagada (cable/satelital, otra)",
-  data$e_v13 == "4" ~ "Servicio de internet fijo",
-  data$e_v13 == "5" ~ "Computadora (de escritorio o laptop)",
-  data$e_v13 == "6" ~ "Refrigeradora",
-  data$e_v13 == "7" ~ "Máquina lavadora de ropa",
-  data$e_v13 == "8" ~ "Máquina secadora de ropa",
-  data$e_v13 == "9" ~ "Horno microondas",
-  data$e_v13 == "10" ~ "Máquina extractora de olores",
-  data$e_v13 == "11" ~ "Ninguno",
-  TRUE ~ data$e_v13
+data$c8 <- labelled(as.integer(data$c8), labels = c(
+  `Pasaporte venezolano vigente` = 1,
+  `Pasaporte venezolano vencido` = 2,
+  `Cédula de identidad venezolana vigente` = 3,
+  `Cédula de identidad venezolana vencido` = 4,
+  `Cédula de identidad ecuatoriana para extranjeros vigente` = 5,
+  `Cédula de identidad ecuatoriana para extranjeros vencido` = 6,
+  `Carnet de Extranjería (Vigente)` = 7,
+  `Carnet de Extranjería (Vencido)` = 8,
+  `Visa VIRTE (Vencida)` = 9,
+  `Visa VIRTE (Vigente)` = 10,
+  `Visa Mercosur (PTP) (Vigente)` = 11,
+  `VIsa Mercosur (PTP) (Vencido)` = 12,
+  `No cuenta con ningún documento` = 14,
+  `Prefiere no responder` = 99
+  )
 )
 
-## e_r1_1: Destino de remesas ##
-data$e_r1_1 <- case_when(
-  data$e_r1_1 == "1" ~ "A Venezuela",
-  data$e_r1_1 == "2" ~ "A algún país de Latinoamérica",
-  data$e_r1_1 == "3" ~ "A Estados Unidos o Canadá",
-  data$e_r1_1 == "4" ~ "A algún país de Europa",
-  data$e_r1_1 == "5" ~ "A algún país de Asia",
-  data$e_r1_1 == "88" ~ "Otro",
-  TRUE ~ data$e_r1_1
+data$c9 <- labelled(as.integer(data$c9), labels = c(
+  `Sí, a Venezuela` = 1,
+  `Sí, a un país de Latinoamérica` = 2,
+  `Sí, a un país de Europa, América del Norte u otro` = 3,
+  `No tengo intención de abandonar Ecuador próximamente` = 4
+  )
 )
 
-## e_r1_2: Método de envío de remesas ##
-data$e_r1_2 <- case_when(
-  data$e_r1_2 == "1" ~ "Transferencia Bancaria (de un Banco ecuatoriano a uno venezolano)",
-  data$e_r1_2 == "2" ~ "Transferencia al exterior (a un Banco en otros países)",
-  data$e_r1_2 == "3" ~ "Agencia de Envíos o Casa de Cambios formal (MoneyGram, WesternUnion, Paypal, otros)",
-  data$e_r1_2 == "4" ~ "Agencia de Envíos o Casa de Cambios informal",
-  data$e_r1_2 == "5" ~ "Intercambio de divisas",
-  data$e_r1_2 == "6" ~ "Con criptomonedas (Bitcoin u otros)",
-  data$e_r1_2 == "7" ~ "Con una persona independiente",
-  data$e_r1_2 == "8" ~ "Con un conocido o familiar",
-  data$e_r1_2 == "9" ~ "Grupos en redes sociales",
-  data$e_r1_2 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$e_r1_2
+data$d1 <- labelled(as.integer(data$d1), labels = c(
+  `Trabaja (por cuenta propia, para un empleador o es generador de empleo)` = 1,
+  `Desempleado/a (buscando trabajo)` = 2,
+  `Estudiante` = 3,
+  `Amo/a de casa` = 4,
+  `Jubilado/a` = 5,
+  `Incapacitado/a para trabajar` = 6
+  )
+) 
+
+data$d2 <- labelled(as.integer(data$d2), labels = c(
+  `Empleada/o u obrera/o privado` = 1,
+  `Empleada/o u obrera/o del Estado, Gobierno, Municipio, Consejo Provincial, Junta Parroquial` = 2,
+  `Jornalera/o o peón` = 3,
+  `Empleada/o doméstica/o` = 4,
+  `Patrona/o` = 5,
+  `Cuenta propia` = 6,
+  `Socia/o` = 7,
+  `Trabajadora/or familiar no remunerada/o` = 8
+  )
 )
 
-## e_r1_3: Frecuencia de envío de remesas ##
-data$e_r1_3 <- case_when(
-  data$e_r1_3 == "1" ~ "Semanalmente",
-  data$e_r1_3 == "2" ~ "Quincenalmente",
-  data$e_r1_3 == "3" ~ "Mensualmente",
-  data$e_r1_3 == "4" ~ "Bimestralmente",
-  data$e_r1_3 == "5" ~ "Trimestralmente",
-  data$e_r1_3 == "6" ~ "Semestralmente",
-  data$e_r1_3 == "7" ~ "Anualmente",
-  TRUE ~ data$e_r1_3
+data$d3 <- labelled(as.integer(data$d3), labels = c(
+  `Agricultura, ganadería, silvicultura y pesca` = 1,
+  `Explotación de minas y canteras` = 2,
+  `Industrias manufactureras` = 3,
+  `Suministro de electricidad, gas, vapor y aire acondicionado` = 4,
+  `Distribución de agua; alcantarillado; gestión de desechos y actividades de saneamiento` = 5,
+  `Construcción` = 6,
+  `Comercio al por mayor y al por menor; reparación de vehículos automotores y motocicletas` = 7,
+  `Transporte y almacenamiento` = 8,
+  `Actividades de alojamiento y de servicio de comidas` = 9,
+  `Información y comunicación` = 10,
+  `Actividades financieras y de seguros` = 11,
+  `Actividades inmobiliarias` = 12,
+  `Actividades profesionales, científicas y técnicas` = 13,
+  `Actividades de servicios administrativos y de apoyo` = 14,
+  `Administración pública y defensa; planes de seguridad social de afiliación obligatoria` = 15,
+  `Enseñanza` = 16,
+  `Actividades de atención de la salud humana y de asistencia social` = 17,
+  `Artes, entretenimiento y recreación` = 18,
+  `Otras actividades de servicios` = 19,
+  `Actividades de los hogares como empleadores.` = 20,
+  `Actividades de organizaciones y órganos extraterritoriales.` = 21,
+  `Otro (especificar)` = 88
+  )
 )
 
-## g1: Productos financieros ##
-data$g1 <- case_when(
-  data$g1 == "1" ~ "Cuenta de ahorros",
-  data$g1 == "2" ~ "Cuenta corriente",
-  data$g1 == "3" ~ "Cuenta a plazo fijo",
-  data$g1 == "4" ~ "Tarjeta de débito",
-  data$g1 == "5" ~ "Tarjeta de crédito",
-  data$g1 == "6" ~ "Préstamo personal o para consumo",
-  data$g1 == "7" ~ "Crédito hipotecario",
-  data$g1 == "8" ~ "Crédito directo",
-  data$g1 == "9" ~ "Servicio de envío de remesas",
-  data$g1 == "10" ~ "Tarjeta prepaga",
-  data$g1 == "11" ~ "Billetera virtual",
-  data$g1 == "12" ~ "No tienen ningún producto financiero",
-  data$g1 == "88" ~ "Otro (especificar)",
-  TRUE ~ data$g1
+data$d5 <- labelled(as.integer(data$d5), labels = c(
+  `Si` = 1,
+  `No` = 2
+  )
+)
+
+data$d6 <- labelled(as.integer(data$d6), labels = c(
+  `IESS, Seguro general` = 1,
+  `IESS, Seguro voluntario` = 2,
+  `IESS, Seguro campesino` = 3,
+  `Seguro del ISSFA o ISSPOL` = 4,
+  `No aporta, es Jubilada/o del IESS / ISSFA / ISSPOL` = 5,
+  `Seguro de salud privado` = 6,
+  `Seguro de salud público (IESS) y privado` = 7,
+  `Ninguno` = 8
+  )
+)
+
+data$ind2 <- labelled(as.integer(data$ind2), labels = c(
+  `Registro Único de Contribuyentes (RUC) en el SRI` = 1,
+  `Inscripción en régimen tributario (General o RIMPE)` = 2,
+  `Prestación de servicios profesionales: emite facturas, no tiene relación de dependencia` = 3,
+  `Ninguna, el negocio o empresa no está registrado formalmente` = 5,
+  `Otro (especificar)` = 88
+  )
+)
+
+data$ind3 <- labelled(as.integer(data$ind3), labels = c(
+  `Unipersonal` = 1,
+  `Negocio familiar` = 2,
+  `Microempresa (entre 1 y 9 trabajadores)` = 3,
+  `Pequeña empresa (entre 10 y 49 trabajadores)` = 4,
+  `Mediana empresa (entre 50 y 199 trabajadores)` = 5
+  )
+)
+
+data$ind6 <- labelled(as.integer(data$ind6), labels = c(
+  `Si, ya hizo la declaración` = 1,
+  `Si, piensa hacerlo` = 2,
+  `No, hará la declaración` = 3,
+  `No, no está obligado/a a presentar declaración de impuestos` = 4
+  )
+)
+
+data$dep1 <- labelled(as.integer(data$dep1), labels = c(
+  `Ocupaciones militares` = 1,
+  `Directores y gerentes` = 2,
+  `Profesionales científicos e intelectuales` = 3,
+  `Técnicos y profesionales del nivel medio` = 4,
+  `Personal de apoyo administrativo` = 5,
+  `Trabajadores de los servicios y vendedores de comercios y mercados` = 6,
+  `Agricultores y trabajadores calificados agropecuarios, forestales y pesqueros` = 7,
+  `Oficiales, operarios y artesanos de artes mecánicas y de otros oficios` = 8,
+  `Operadores de instalaciones y máquinas y ensambladores` = 9,
+  `Ocupaciones elementales` = 10,
+  `Otro (especificar)` = 88
+  )
+)
+
+data$dep2 <- labelled(as.integer(data$dep2), labels = c(
+  `Contrato indefinido: No tiene fecha de finalización` = 1,
+  `Contrato a plazo fijo: Tiene una duración máxima de 2 años, renovable una vez` = 2,
+  `Contrato eventual: Para trabajos temporales o extraordinarios, máximo 6 meses en un año` = 3,
+  `Contrato por obra o servicio determinado: Finaliza cuando se completa una tarea específica` = 4,
+  `Contrato de jornada parcial permanente: Para quienes trabajan menos de 40 horas semanales, con beneficios proporcionales.` = 5,
+  `Contrato de aprendizaje/pasantía: Para estudiantes o aprendices con una duración máxima de 6 meses.` = 6,
+  `Contrato agropecuario: Para trabajadores en el sector agrícola con condicionesespeciales` = 7,
+  `Trabajo sin contrato, compromiso de boca` = 9,
+  `Otro (especificar)` = 88
+  )
+)
+
+data$dep4 <- labelled(as.integer(data$dep4), labels = c(
+  `Bono de alimentación` = 1,
+  `Transporte` = 2,
+  `13er sueldo` = 3,
+  `14to sueldo` = 4,
+  `Utilidades` = 5,
+  `Bonificaciones o incentivos (bonos por desempeño, productividad, antigüedad, etc.).` = 6,
+  `Comisiones sobre ventas o producción` = 7,
+  `Horas extras pagadas` = 8,
+  `No cuenta con beneficios adicionales` = 9,
+  `Otro (especificar)` = 88
+  )
+)
+
+data$dep5 <- labelled(as.integer(data$dep5), labels = c(
+  `Si, ya hice la declaración` = 1,
+  `Si, pienso hacerlo` = 2,
+  `No, hare la declaración` = 3,
+  `No, no estoy obligado a presentar declaración de impuestos` = 4
+  )
+)
+
+data$gasto_alimentacion <- labelled(as.integer(data$gasto_alimentacion), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$gasto_bebidas <- labelled(as.integer(data$gasto_bebidas), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$e_t3 <- labelled(as.integer(data$e_t3), labels = c(
+  `Automóvil o camioneta` = 1,
+  `Motocicleta` = 2,
+  `Bicicleta` = 3,
+  `Ninguno` = 4,
+  `Otro medio de transporte` = 88
+  )
+)
+
+data$gasto_transporte <- labelled(as.integer(data$gasto_transporte), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$e_v1 <- labelled(as.integer(data$e_v1), labels = c(
+  `Propia y totalmente pagada` = 1,
+  `Propia y la está pagando` = 2,
+  `Propia (regalada, donada, heredada o por posesión)` = 3,
+  `Arrendada/anticresis` = 4,
+  `Prestada o cedida (no paga)` = 5,
+  `Por servicios` = 6
+  )
+)
+
+data$e_v4 <- labelled(as.integer(data$e_v4), labels = c(
+  `Hormigón (losa, cemento)` = 1,
+  `Fibrocemento, asbesto (eternit, eurolit)` = 2,
+  `Zinc, aluminio (lámina o plancha metálica)` = 3,
+  `Teja` = 4,
+  `Palma, paja u hoja` = 5,
+  `Otro material` = 88
+  )
+)
+
+data$e_v5 <- labelled(as.integer(data$e_v5), labels = c(
+  `Hormigón` = 1,
+  `Ladrillo o bloque` = 2,
+  `Panel prefabricado (yeso, fibrocemento, etc.)` = 3,
+  `Adobe o tapia` = 4,
+  `Madera` = 5,
+  `Caña revestida o bahareque` = 6,
+  `Caña no revestida` = 7,
+  `Otro material` = 88
+  )
+)
+
+data$e_v6 <- labelled(as.integer(data$e_v6), labels = c(
+  `Duela, parquet, tablón o piso flotante` = 1,
+  `Cerámica, baldosa, vinil o porcelanato` = 2,
+  `Mármol o marmetón` = 3,
+  `Ladrillo o cemento` = 4,
+  `Tabla sin tratar` = 5,
+  `Caña sin tratar` = 6,
+  `Tierra` = 7,
+  `Otro material` = 88
+  )
+)
+
+data$e_v7 <- labelled(as.integer(data$e_v7), labels = c(
+  `Por tubería, dentro de la vivienda` = 1,
+  `Por tubería, fuera de la vivienda pero dentro del edificio, lote o terreno` = 2,
+  `Por tubería, fuera del edificio, lote o terreno` = 3,
+  `No recibe agua por tubería, sino por otros medios` = 4
+  )
+)
+
+data$e_v8 <- labelled(as.integer(data$e_v8), labels = c(
+  `Inodoro o escusado, conectado a red pública de alcantarillado` = 1,
+  `Inodoro o escusado, conectado a pozo séptico` = 2,
+  `Inodoro o escusado, conectado a biodigestor` = 3,
+  `Inodoro o escusado, conectado a pozo ciego` = 4,
+  `Inodoro o escusado, con descarga directa al mar, río, lago o quebrada` = 5,
+  `Letrina` = 6,
+  `No tiene` = 7
+  )
+)
+
+data$e_v9 <- labelled(as.integer(data$e_v9), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$e_v10 <- labelled(as.integer(data$e_v10), labels = c(
+  `Por carro recolector` = 1,
+  `Por contenedor municipal` = 2,
+  `La arroja en terreno baldío` = 3,
+  `La quema` = 4,
+  `La entierra` = 5,
+  `La arroja al río, acequia, canal o quebrada` = 6,
+  `De otra forma` = 7
+  )
+)
+
+data$e_v11 <- labelled(as.integer(data$e_v11), labels = c(
+  `Gas de tanque o cilindro` = 1,
+  `Gas centralizado (por tubería)` = 2,
+  `Electricidad` = 3,
+  `Leña o carbón` = 4,
+  `Biogás (residuos vegetales y/o animales, etc.)` = 5,
+  `Otro (Ej: gasolina, kerex, diésel, etc.)` = 88,
+  `Ninguno (no cocina)` = 7
+  )
+)
+
+data$e_v13 <- labelled(as.integer(data$e_v13), labels = c(
+  `Servicio de teléfono convencional` = 1,
+  `Servicio de teléfono celular` = 2,
+  `Servicio de televisión pagada (cable/satelital, otra)` = 3,
+  `Servicio de internet fijo` = 4,
+  `Computadora (de escritorio o laptop)` = 5,
+  `Refrigeradora` = 6,
+  `Máquina lavadora de ropa` = 7,
+  `Máquina secadora de ropa` = 8,
+  `Horno microondas` = 9,
+  `Máquina extractora de olores` = 10,
+  `Ninguno` = 11
+  )
+)
+
+data$gasto_vivienda <- labelled(as.integer(data$gasto_vivienda), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$gasto_mensuales <- labelled(as.integer(data$gasto_mensuales), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$e_r1 <- labelled(as.integer(data$e_r1), labels = c(
+  `Sí` = 1,
+  `No` = 2
+  )
+)
+
+data$e_r1_1 <- labelled(as.integer(data$e_r1_1), labels = c(
+  `A Venezuela` = 1,
+  `A algún país algún país de Latinoamérica` = 2,
+  `A Estados Unidos o Canadá` = 3,
+  `A algún país de Europa` = 4,
+  `A algún país de Asia` = 5,
+  `Otro` = 88
+  )
+)
+
+data$e_r1_2 <- labelled(as.integer(data$e_r1_2), labels = c(
+  `Transferencia Bancaria (de un Banco ecuatoriano a uno venezolano)` = 1,
+  `Transferencia al exterior (a un Banco en otros países)` = 2,
+  `Agencia de Envíos o Casa de Cambios formal (MoneyGram, WesternUnion, Paypal, otros)` = 3,
+  `Agencia de Envíos o Casa de Cambios informal` = 4,
+  `Intercambio de divisas` = 5,
+  `Con criptomonedas (Bitcoin u otros)` = 6,
+  `Con una persona independiente` = 7,
+  `Con un conocido o familiar` = 8,
+  `Grupos en redes sociales` = 9,
+  `Otro (especificar)` = 88
+  )
+)
+
+data$e_r1_3 <- labelled(as.integer(data$e_r1_3), labels = c(
+  `Semanalmente` = 1,
+  `Quincenalmente` = 2,
+  `Mensualmente` = 3,
+  `Bimestralmente` = 4,
+  `Trimestralmente` = 5,
+  `Semestralmente` = 6,
+  `Anualmente` = 7
+  )
+)
+
+data$g1 <- labelled(as.integer(data$g1), labels = c(
+  `Cuenta de ahorros` = 1,
+  `Cuenta corriente` = 2,
+  `Cuenta a plazo fijo` = 3,
+  `Tarjeta de débito` = 4,
+  `Tarjeta de crédito` = 5,
+  `Préstamo personal o para consumo` = 6,
+  `Crédito hipotecario` = 7,
+  `Crédito directo` = 8,
+  `Servicio de envío de remesas` = 9,
+  `Tarjeta prepaga` = 10,
+  `Billetera virtual` = 11,
+  `No tienen ningún producto financiero` = 12,
+  `Otro (especificar)` = 88
+  )
 )
 
 # Leer el archivo Excel de etiquetas
@@ -494,9 +570,31 @@ data$g1 <- case_when(
 #  })
 #}
 
+contribucion_fiscal_audit_dashboard <- data %>% 
+  labelled::to_factor() 
+
+# Dashboard ---------------------------------------------------------------
+
+# Autenticación
+gs4_auth(email = 'alozano@equilibriumbdc.com', cache = 'secrets')
+
+# ID del documento de Google Sheets
+id_dashboard <- "1AUFxK7Xj7GrYHjA7SgcGfrunvp13CTx3Kwv8V5GOWKk"
+
+# Escribir datos en una hoja específica
+sheet_write(
+  data = contribucion_fiscal_audit_dashboard,
+  ss = as_sheets_id(id_dashboard),
+  sheet = 'Hoja 1'
+)
+
 #Guardar en múltiples formatos ---------------------------------------------
 
 ruta <- paste0("2_Auditadas/contribucion_fiscal_audit_dashboard")
 
 ## Excel
 write_xlsx(data, path = paste0(ruta, ".xlsx"), col_names = TRUE)
+
+# Limpieza del entorno ----------------------------------------------------------
+rm(list = ls())
+
