@@ -5,6 +5,10 @@ p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven,
        jsonlite, kableExtra, labelled, lubridate, purrr, skimr, stringr, 
        tidyverse, tidyr, tidygeocoder, readxl, writexl)
 
+# 2. Importar datos ------------------------------------------------------------
+
+load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
+
 
 # Poner Labels a las varnames y las respuestas ---------------------------------------------
 
