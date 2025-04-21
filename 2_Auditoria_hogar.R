@@ -215,7 +215,7 @@ data %>%
 
 ggplot(data %>% filter(!ind4 %in% c(9999, 99999)), aes(y = ind4)) +
   geom_boxplot() +
-  labs(title = "Distribución del Ingreso Trabajador Inependiente", y = "Ingreso (USD)") +
+  labs(title = "Distribución del Ingreso Trabajador Independiente", y = "Ingreso (USD)") +
   theme_minimal()
 
 ggplot(data %>% filter(!dep3 %in% c(9999)), aes(y = ind4)) +

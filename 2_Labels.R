@@ -10,7 +10,6 @@ p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven,
 load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
 
 # Poner Labels a las varnames y las respuestas ---------------------------------------------
-
 ## Asignación de val_labels para todas las variables ##
 
 data$id_encuestador <- labelled(as.integer(data$id_encuestador), labels = c(
@@ -43,9 +42,7 @@ data$id_encuestador <- labelled(as.integer(data$id_encuestador), labels = c(
   `Encuestador Los Ríos` = 27,
   `Encuestador Guaranda` = 28,
   `Encuestador Machala` = 29,
-  `Julie Morales` = 30
-  )
-)
+  `Julie Morales` = 30))
 
 data$a0 <- labelled(as.integer(data$a0), labels = c(
   `AMBATO` = 1,

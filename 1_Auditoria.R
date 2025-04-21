@@ -422,10 +422,17 @@ data_hogar <- data_hogar %>%
       exceso_porcentaje <= 500 ~ "Grave (100–500%)",
       exceso_porcentaje > 500 ~ "Extremo (>500%)"))
 
-data <- left_join(data, data_hogar, by = "instanceID")
+# Identificar las variables nuevas que tiene data_hogar y que no están en data
+nuevas_vars <- setdiff(names(data_hogar), names(data))
+
+# Agregar instanceID para poder hacer el join
+nuevas_vars <- c("instanceID", nuevas_vars)
+
+# Hacer el join solo con esas variables
+data <- left_join(data, select(data_hogar, all_of(nuevas_vars)), by = "instanceID")
 
 data <- data %>%
-  mutate(ale_invalida = if_else(clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)"), 1, 0))
+  mutate(ale_invalida = if_else(clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)","No disponible"), 1, 0))
 
 #Guardar en múltiples formatos ---------------------------------------------
 
