@@ -101,7 +101,6 @@ data <- data %>%
   mutate(ale_missing_tot = rowSums(across(all_of(alertas_missings))))
 
 # 4. Outliers
-
 # Lista de variables numéricas
 variables_numericas <- c("b1", "b2", "b3", "b4", "b5", "b6", "b7", 
                          "c2","d4","ind4", "ind5","dep3", "dep4_1", 
@@ -143,6 +142,8 @@ data <- data %>%
   mutate(across(all_of(alertas_outlers), ~ replace_na(., 0))) %>%
   mutate(ale_outlier_tot = rowSums(across(all_of(alertas_outlers))))
 
+#table(data$ale_outlier_tot)
+
 # 5. Ex. prefiere no responder/no sabe/otro
 variables_ing_gastos <- c("d4","ind4", "ind5","dep3", "dep4_1", 
                           "e_a1", "e_a2", "e_a3", "e_a4","e_b1", "e_b2", "e_b3", 
@@ -166,6 +167,83 @@ data <- data %>%
   mutate(across(all_of(alertas_no_respuesta), ~ replace_na(., 0))) %>%
   mutate(ale_no_respuesta_tot = rowSums(across(all_of(alertas_no_respuesta))))
 
+#table(data$ale_no_respuesta_tot)
+
+# 5. Exceso de 0
+
+# Crear columnas de alerta solo para valores 0
+data <- data %>%
+  mutate(across(all_of(variables_ing_gastos), 
+                ~ if_else(.x == 0, 1, 0), 
+                .names = "ale_ex_cero_{.col}"))
+
+# Identificar nombres de las columnas de alerta
+alertas_ex_ceros <- grep("^ale_ex_cero_", names(data), value = TRUE)
+
+# Sumar alertas, reemplazando NA por 0
+data <- data %>%
+  mutate(across(all_of(alertas_ex_ceros), ~ replace_na(., 0))) %>%
+  mutate(ale_ex_cero_tot = rowSums(across(all_of(alertas_ex_ceros))))
+
+#table(data$ale_ex_cero_tot)
+
+# Revisar gastos totales
+
+cols_a <- c("e_a1", "e_a2", "e_a3", "e_a4")
+cols_b <- c("e_b1", "e_b2", "e_b3")
+cols_t <- c("e_t1", "e_t2", "e_t4")
+cols_v <- c("e_v3", "e_v14", "e_v15", "e_v16", "e_v17", "e_v18")
+cols_otros <- c("e_s3", "e_e1", "e_o1", "e_o2", "e_o3")
+
+data <- data %>%
+  mutate(
+    total_alimentacion = as.numeric(as.character(total_alimentacion)),
+    total_bebidas = as.numeric(as.character(total_bebidas)),
+    total_transporte = as.numeric(as.character(total_transporte)),
+    total_vivienda = as.numeric(as.character(total_vivienda)),
+    total_gastos_mensuales = as.numeric(as.character(total_gastos_mensuales)),)
+
+
+data <- data %>%
+  mutate(across(
+    all_of(c(cols_a, cols_b, cols_t, cols_v, cols_otros)),
+    ~ as.numeric(as.character(.))
+  ))
+
+data <- data %>%
+  mutate(
+    total_alimentacion = if_else(
+      is.na(total_alimentacion),
+      rowSums(across(all_of(cols_a), ~ ifelse(. != 9999, ., 0)), na.rm = TRUE),
+      total_alimentacion
+    ),
+    
+    total_bebidas = if_else(
+      is.na(total_bebidas),
+      rowSums(across(all_of(cols_b), ~ ifelse(. != 9999, ., 0)), na.rm = TRUE),
+      total_bebidas
+    ),
+    
+    total_transporte = if_else(
+      is.na(total_transporte),
+      rowSums(across(all_of(cols_t), ~ ifelse(. != 9999, ., 0)), na.rm = TRUE),
+      total_transporte
+    ),
+    
+    total_vivienda = if_else(
+      is.na(total_vivienda),
+      rowSums(across(all_of(cols_v), ~ ifelse(. != 9999, ., 0)), na.rm = TRUE),
+      total_vivienda
+    ),
+    
+    total_gastos_mensuales = if_else(
+      is.na(total_gastos_mensuales),
+      rowSums(across(all_of(c(cols_a, cols_b, cols_t, cols_v, cols_otros)), ~ ifelse(. != 9999, ., 0)), na.rm = TRUE),
+      total_gastos_mensuales
+    )
+  )
+
+# cuales tienen alertas por tipo: outliers, NS/NR, ingresos vs gastos -> alerta cuando la diferencia no es normal  
 
 # 6. Validar fechas
 data <- data %>%
@@ -175,6 +253,7 @@ data <- data %>%
     difference_min = as.numeric(difftime(end, start, units = "mins")),
     duration_minutes = round(difference_min, 0)
   )
+
 # Estadísticos de duración
 sd_duracion <- sd(data$difference_min, na.rm = TRUE)
 mediana_duracion <- median(data$difference_min, na.rm = TRUE)
@@ -239,13 +318,114 @@ data <- data %>%
   mutate(across(all_of(alerta_incongruencias), ~ replace_na(., 0))) %>%
   mutate(ale_incongruencias_tot = rowSums(across(all_of(alerta_incongruencias))))
 
-data <- data %>%
+#table(data$ale_incongruencias_tot)
+
+valores_invalidos <- c(999, 9999, 99999, 999999, 888, 8888, 88888, 888888)
+
+data_hogar <- data %>%
+  group_by(instanceID) %>%
   mutate(
-    alerta_general = if_else(
-      rowSums(select(., starts_with("ale_")), na.rm = TRUE) > 0,
-      1, 0
+    # Ingreso ind4: si todos son inválidos, poner 0; si hay válidos, sumarlos
+    ingreso_ind4 = if (all(ind4 %in% valores_invalidos | is.na(ind4))) {
+      0
+    } else {
+      sum(coalesce(if_else(ind4 %in% valores_invalidos, NA_real_, ind4), 0), na.rm = TRUE)
+    },
+    
+    # Ingreso dep3: misma lógica
+    ingreso_dep3 = if (all(dep3 %in% valores_invalidos | is.na(dep3))) {
+      0
+    } else {
+      sum(coalesce(if_else(dep3 %in% valores_invalidos, NA_real_, dep3), 0), na.rm = TRUE)
+    }
+  ) %>%
+  slice(1) %>%
+  ungroup() %>%
+  mutate(
+    alerta_sin_ingresos = if_else(ingreso_ind4 == 0 & ingreso_dep3 == 0, 1, 0)
+  )
+
+data_hogar <- data_hogar %>%
+  mutate(across(c(e_s1, e_s2, e_s3, e_o4), 
+                ~ ifelse(. %in% valores_invalidos, NA, . / 6), 
+                .names = "mensual_{.col}"))
+
+data_hogar <- data_hogar %>%
+  mutate(mensual_e_o5 = ifelse(e_o5 %in% valores_invalidos, NA, e_o5 / 12))
+
+data_hogar <- data_hogar %>%
+  mutate(
+    mensual_e_r1_4 = case_when(
+      e_r1_4 %in% valores_invalidos ~ NA_real_,
+      e_r1_3 == 1 ~ e_r1_4 * 4,        # Semanal
+      e_r1_3 == 2 ~ e_r1_4 * 2,        # Quincenal
+      e_r1_3 == 3 ~ e_r1_4,            # Mensual
+      e_r1_3 == 4 ~ e_r1_4 / 2,        # Bimestral
+      e_r1_3 == 5 ~ e_r1_4 / 3,        # Trimestral
+      e_r1_3 == 6 ~ e_r1_4 / 6,        # Semestral
+      e_r1_3 == 7 ~ e_r1_4 / 12,       # Anual
+      TRUE ~ NA_real_
     )
   )
+
+variables_gastos <- c("e_a1", "e_a2", "e_a3", "e_a4","e_b1", "e_b2", "e_b3", 
+                      "e_t1", "e_t2", "e_t4", "e_v2", "e_v3","e_v12", 
+                      "e_v14", "e_v15", "e_v16", "e_v17", "e_v18", 
+                      "e_e1", "e_s3",
+                      "e_o1", "e_o2", "e_o3", 
+                      "e_ah1","e_d1",
+                      "mensual_e_s1","mensual_e_s2","mensual_e_o4","mensual_e_o5",
+                      "mensual_e_r1_4")
+
+data_hogar <- data_hogar %>%
+  mutate(across(all_of(variables_gastos), ~ as.numeric(.))) %>%
+  mutate(across(all_of(variables_gastos), ~ ifelse(. %in% valores_invalidos, NA, .)))
+
+data_hogar <- data_hogar %>%
+  rowwise() %>%
+  mutate(gasto_total = sum(c_across(all_of(variables_gastos)), na.rm = TRUE)) %>%
+  ungroup()
+
+data_hogar <- data_hogar %>%
+  rowwise() %>%
+  mutate(ingreso_total = sum(ingreso_ind4, ingreso_dep3, na.rm = TRUE)) %>%
+  ungroup()
+
+data_hogar <- data_hogar %>%
+  mutate(
+    balance_hogar = ingreso_total - gasto_total
+  )
+
+data_hogar <- data_hogar %>%
+  mutate(
+    porcentaje_gasto_sobre_ingreso = if_else(
+      ingreso_total > 0,
+      gasto_total / ingreso_total * 100,
+      NA_real_
+    )
+  )
+
+data_hogar <- data_hogar %>%
+  mutate(
+    exceso_porcentaje = if_else(
+      ingreso_total > 0,
+      (gasto_total - ingreso_total) / ingreso_total * 100,
+      NA_real_))
+
+data_hogar <- data_hogar %>%
+  mutate(
+    clasificacion_exceso = case_when(
+      is.na(exceso_porcentaje) ~ "No disponible",
+      exceso_porcentaje <= 0 ~ "Sin exceso",
+      exceso_porcentaje <= 20 ~ "Leve (0–20%)",
+      exceso_porcentaje <= 100 ~ "Moderado (20–100%)",
+      exceso_porcentaje <= 500 ~ "Grave (100–500%)",
+      exceso_porcentaje > 500 ~ "Extremo (>500%)"))
+
+data <- left_join(data, data_hogar, by = "instanceID")
+
+data <- data %>%
+  mutate(ale_invalida = if_else(clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)"), 1, 0))
 
 #Guardar en múltiples formatos ---------------------------------------------
 
@@ -262,4 +442,3 @@ write.csv(data, file = paste0(ruta, ".csv"), row.names = FALSE)
 
 # Limpieza del entorno ----------------------------------------------------------
 rm(list = ls())
-
