@@ -15,6 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Descargar archivos LFS
+      - name: Pull LFS files
+        run: |
+          git lfs install
+          git lfs pull
+
       # Instalar dependencias del sistema operativo
       - name: Install system dependencies
         run: |
