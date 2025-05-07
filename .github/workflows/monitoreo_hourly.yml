@@ -20,6 +20,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libxml2-dev libharfbuzz-dev libfribidi-dev
+          sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev # Dependencias para sf
 
       # Configurar R en el entorno
       - name: Set up R
@@ -31,7 +32,7 @@ jobs:
       - name: Install R libraries
         run: |
           Rscript -e 'install.packages("pacman")'
-          Rscript -e 'pacman::p_load(tidyverse, httr, jsonlite, googledrive, writexl, haven, stringr, labelled, lubridate, gtsummary, googlesheets4, kableExtra, skimr, tidygeocoder)'
+          Rscript -e 'pacman::p_load(tidyverse, httr, jsonlite, googledrive, writexl, haven, stringr, labelled, lubridate, gtsummary, googlesheets4, kableExtra, skimr, tidygeocoder, sf)'
 
       # Ejecutar scripts en orden
       - name: Run Script 0_Importar_datos
