@@ -1,4 +1,7 @@
+# 1. Instalar librerias --------------------------------------------------------
+
 #install.packages("pacman")
+
 library(pacman)
 
 p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven, 
@@ -14,34 +17,34 @@ load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
 
 data$id_encuestador <- labelled(as.integer(data$id_encuestador), labels = c(
   `Carmen Mora` = 1,
-  `Mejías Yonattan` = 2,
+  `Yonattan Mejías` = 2,
   `Kenia Inaudi` = 3,
   `Katherine Oropesa` = 4,
   `María Isabel Cabrera` = 5,
-  `Contreras Leslie` = 6,
-  `Castro Ailing` = 7,
+  `Leslie Contreras` = 6,
+  `Aylin Castro` = 7,
   `Vanessa Chaparro` = 8,
-  `Acasio Yanez Angélica María` = 9,
-  `Sanchez Dayleth` = 10,
+  `Angelica Acasio` = 9,
+  `Dayleth Sanchez` = 10,
   `Valente Fabioly` = 11,
   `Laura Perez` = 12,
   `Yarit Rodriguez` = 13,
   `Marlene Velasquez` = 14,
   `Carolina Zambrano` = 15,
-  `Bencomo Valero Maite Astrid Carolina` = 16,
-  `Gonzalez Ivan` = 17,
-  `Mendoza Claireth` = 18,
+  `Maite Bencomo` = 16,
+  `Ivan Gonzalez` = 17,
+  `Claireth Mendoza` = 18,
   `Osal Reismeris` = 19,
   `Shera Valera` = 20,
   `Noraima Ruiz` = 21,
   `Gervis Lascano` = 22,
-  `Encuestador Naranjito` = 23,
-  `Stephany Rincon` = 24,
-  `Encuestador La Libertad` = 25,
+  `Yusleidy Cchiavino` = 23,
+  `Wuilfredo Briceño` = 24,
+  `Imara Ramirez` = 25,
   `Marjoorie Lucas` = 26,
-  `Encuestador Los Ríos` = 27,
+  `Luis Ortiz` = 27,
   `Encuestador Guaranda` = 28,
-  `Encuestador Machala` = 29,
+  `Urielys Landaeta` = 29,
   `Julie Morales` = 30))
 
 data$a0 <- labelled(as.integer(data$a0), labels = c(
@@ -52,7 +55,7 @@ data$a0 <- labelled(as.integer(data$a0), labels = c(
   `GUAYAQUIL` = 5,
   `HUAQUILLAS` = 6,
   `JOSÉ LUIS TAMAYO` = 7,
-  `LA MANÁ` = 8,
+  `SAN MIGUEL` = 8,
   `MACHALA` = 9,
   `MANTA` = 10,
   `MONTECRISTI` = 11,
@@ -62,7 +65,8 @@ data$a0 <- labelled(as.integer(data$a0), labels = c(
   `SAN MIGUEL DE IBARRA` = 15,
   `SANGOLQUÍ` = 16,
   `SANTA ROSA` = 17,
-  `VENTANAS` = 18
+  `ATUNTAQUI` = 18,
+  `TUMBACO` = 19
   )
 )
 
@@ -570,6 +574,9 @@ data$g1 <- labelled(as.integer(data$g1), labels = c(
 contribucion_fiscal_audit_dashboard <- data %>% 
   labelled::to_factor() 
 
+contribucion_fiscal_audit_dashboard <- contribucion_fiscal_audit_dashboard %>%
+  select(-geometry)
+
 # Dashboard ---------------------------------------------------------------
 
 # Autenticación
@@ -585,13 +592,15 @@ sheet_write(
   sheet = 'Hoja 1'
 )
 
-#Guardar en múltiples formatos ---------------------------------------------
+# Guardar en múltiples formatos ---------------------------------------------
 
 ruta <- paste0("2_Auditadas/contribucion_fiscal_audit_dashboard")
 
 ## Excel
-write_xlsx(data, path = paste0(ruta, ".xlsx"), col_names = TRUE)
+write_xlsx(contribucion_fiscal_audit_dashboard, path = paste0(ruta, ".xlsx"), col_names = TRUE)
+
+## RData
+save(contribucion_fiscal_audit_dashboard, file = paste0(ruta, ".RData"))
 
 # Limpieza del entorno ----------------------------------------------------------
 rm(list = ls())
-

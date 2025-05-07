@@ -1,17 +1,16 @@
 # 1. Instalar librerias --------------------------------------------------------
-
 #install.packages("pacman")
 library(pacman)
 
 p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven, 
        jsonlite, kableExtra, labelled, lubridate, purrr, skimr, stringr, 
-       tidyverse, tidyr, tidygeocoder, readxl, writexl)
+       tidyverse, tidyr, tidygeocoder, readxl, writexl,
+       sf, ggplot2, tmap,leaflet)
 
 # 2. Importar datos ------------------------------------------------------------
 
 load(paste0('1_Crudas/contribucion_fiscal_cruda_', Sys.Date(), '.RData'))
-
-#
+shp_sectores <- st_read("Otros/contribucion_fiscal_sectores.gpkg")
 
 # Lista de variables o crear
 vars_necesarias <- c("c4","d3e", "ind2e", "dep1e", "dep2e", "dep4e", "e_r1_2e", "g1e")
@@ -31,18 +30,16 @@ data <- data %>%
            a6 == 1)
 
 # 3. Missings
-
 ## Todas las variables
 variables <- c("b1", "b2", "b3", "b4", "b5", "b6", "b7", 
                "c1", "c2", "c3", "c5", "c6", 
                "d1", 
-               "e_a1","e_a2","e_a3","e_a4","gasto_alimentacion",
-               "e_b1","e_b2","e_b3","gasto_bebidas",
-               "e_t1","e_t2","e_t3","gasto_transporte",
+               "e_a1","e_a2","e_a3","e_a4",
+               "e_b1","e_b2","e_b3",
+               "e_t1","e_t2","e_t3",
                "e_v1","e_v2","e_v3","e_v4","e_v5","e_v6","e_v7","e_v8","e_v9","e_v10",
-               "e_v11","e_v12","e_v13","e_v14","e_v15","e_v16","e_v17","e_v18","gasto_vivienda",
+               "e_v11","e_v12","e_v13","e_v14","e_v15","e_v16","e_v17","e_v18",
                "e_s1","e_s2","e_s3","e_e1","e_o1","e_o2","e_o3","e_o4","e_o5",
-               "gasto_mensuales",
                "e_ah1", "e_d1","e_r1","e_reg1",
                "g1")
 
@@ -99,6 +96,8 @@ alertas_missings <- grep("^ale_missing_", names(data), value = TRUE)
 data <- data %>%
   mutate(across(all_of(alertas_missings), ~ replace_na(., 0))) %>%
   mutate(ale_missing_tot = rowSums(across(all_of(alertas_missings))))
+
+#table(data$ale_missing_tot)
 
 # 4. Outliers
 # Lista de variables numéricas
@@ -331,9 +330,7 @@ data_hogar <- data %>%
     } else {
       sum(coalesce(if_else(ind4 %in% valores_invalidos, NA_real_, ind4), 0), na.rm = TRUE)
     },
-    
-    # Ingreso dep3: misma lógica
-    ingreso_dep3 = if (all(dep3 %in% valores_invalidos | is.na(dep3))) {
+      ingreso_dep3 = if (all(dep3 %in% valores_invalidos | is.na(dep3))) {
       0
     } else {
       sum(coalesce(if_else(dep3 %in% valores_invalidos, NA_real_, dep3), 0), na.rm = TRUE)
@@ -422,17 +419,81 @@ data_hogar <- data_hogar %>%
       exceso_porcentaje <= 500 ~ "Grave (100–500%)",
       exceso_porcentaje > 500 ~ "Extremo (>500%)"))
 
-# Identificar las variables nuevas que tiene data_hogar y que no están en data
+#table(data_hogar$clasificacion_exceso)
+
+# Revisar la ubicacion de las encuestas según su zona censal
+
+# 1. Dividir la variable ubicación para obtener la latitud y longitud de cada punto
+
+data_hogar <- data_hogar %>%
+  separate(ubicacion, into = c("lat", "lon", "alt", "otra"), sep = " ") %>%
+  mutate(across(c(lat, lon), as.numeric))
+
+# 2. Transformar la base data_hogar en formato sf y unirla con la base de sectores
+
+data_hogar <- st_as_sf(data_hogar, coords = c("lon", "lat"), crs = 4326)  # WGS84
+data_hogar <- st_transform(data_hogar, st_crs(shp_sectores))
+
+# 3. Calcular el índice del polígono más cercano
+idx_sector_cercano <- st_nearest_feature(data_hogar, shp_sectores)
+
+# 4. Agregar columnas del sector más cercano
+data_hogar <- bind_cols(
+  data_hogar,
+  shp_sectores[idx_sector_cercano, ] %>% st_drop_geometry()
+)
+
+# 4. Calcular distancia mínima en metros
+data_hogar$dist_min_m <- as.numeric(st_distance(data_hogar, shp_sectores[idx_sector_cercano, ], by_element = TRUE))
+
+# 5. Visualizar en el mapa las ubicaciones
+#tmap_mode("view")
+#tm_shape(shp_sectores) +
+#  tm_polygons() +
+#  tm_shape(data_hogar) +
+#  tm_dots(col = "blue", size = 0.05)
+
+#summary(data_hogar$dist_min_m)
+#quantile(data_hogar$dist_min_m, probs = seq(0, 1, 0.1), na.rm = TRUE)
+
+# 6. Clasificar la distancia en categorias
+data_hogar <- data_hogar %>%
+  mutate(distancia_categoria = case_when(
+    dist_min_m <= 10 ~ "0–10 m",
+    dist_min_m <= 50 ~ "11–50 m",
+    dist_min_m <= 150 ~ "51–150 m",
+    dist_min_m <= 300 ~ "151–300 m",
+    dist_min_m <= 1000 ~ "301 m – 1 km",
+    dist_min_m <= 5000 ~ "1–5 km",
+    dist_min_m > 5000 ~ "> 5 km"
+  ))
+
+# Revisar puntos fuera de la zona
+#puntos_fuera <- data_hogar %>% 
+#  filter(is.na(sec_anm))  
+#summary(puntos_fuera$dist_min_m)
+#quantile(puntos_fuera$dist_min_m, probs = seq(0, 1, 0.1), na.rm = TRUE)
+
+# Unir la base data_hogar con data
+
+# 1. Convertir data_hogar a data.frame
+data_hogar <- as.data.frame(data_hogar)
+
+# 2. Identificar las variables nuevas que tiene data_hogar y que no están en data
 nuevas_vars <- setdiff(names(data_hogar), names(data))
 
-# Agregar instanceID para poder hacer el join
+# 3. Agregar instanceID para poder hacer el join
 nuevas_vars <- c("instanceID", nuevas_vars)
 
-# Hacer el join solo con esas variables
+# 4. Hacer el join solo con esas variables
 data <- left_join(data, select(data_hogar, all_of(nuevas_vars)), by = "instanceID")
 
+# Encuestas invalidas
+
 data <- data %>%
-  mutate(ale_invalida = if_else(clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)","No disponible"), 1, 0))
+  mutate(ale_invalida = if_else(
+    clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)", "No disponible"),1, 0
+  ))
 
 #Guardar en múltiples formatos ---------------------------------------------
 
