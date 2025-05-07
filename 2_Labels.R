@@ -571,11 +571,11 @@ data$g1 <- labelled(as.integer(data$g1), labels = c(
 #  })
 #}
 
-contribucion_fiscal_audit_dashboard <- data %>% 
-  labelled::to_factor() 
-
 contribucion_fiscal_audit_dashboard <- contribucion_fiscal_audit_dashboard %>%
   select(-geometry)
+
+contribucion_fiscal_audit_dashboard <- data %>% 
+  labelled::to_factor() 
 
 # Dashboard ---------------------------------------------------------------
 
@@ -591,6 +591,7 @@ sheet_write(
   ss = as_sheets_id(id_dashboard),
   sheet = 'Hoja 1'
 )
+
 
 # Guardar en múltiples formatos ---------------------------------------------
 

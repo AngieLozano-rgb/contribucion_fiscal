@@ -1,4 +1,5 @@
 # 1. Instalar librerias --------------------------------------------------------
+
 #install.packages("pacman")
 library(pacman)
 
@@ -28,6 +29,38 @@ data <- data %>%
            (a3 == 1 | a4 == 1) & 
            a5 != 1 & 
            a6 == 1)
+
+# Lista de variables y sus respectivas opciones
+
+  variables_opciones <- list(
+    c8 = 1:14,
+    dep4 = 1:9,
+    e_t3 = 1:4,
+    e_v13 = 1:11 ,
+    e_r1_2 = 1:9 ,
+    g1 = 1:12
+  )
+
+# Función para expandir opciones de respuesta
+  expandir_opciones <- function(data, var, opciones) {
+    # Convertir las respuestas en una lista separada por espacios
+    data <- data %>%
+      mutate(across(all_of(var), ~ str_split(.x, " "), .names = "split_{col}"))
+      # Crear las nuevas columnas (dep4/1, dep4/2, ...) con valor 1 si la opción fue seleccionada
+      for (i in opciones) {
+      data <- data %>%
+      mutate(!!paste0(var, "/", i) := if_else(str_detect(paste(data[[paste0("split_", var)]]), as.character(i)), 1, 0))
+      }
+      # Eliminar la columna auxiliar "split_{var}"
+      data <- data %>% select(-contains("split_"))
+    return(data)
+  }
+
+# Aplicamos la función a cada variable
+  for (var in names(variables_opciones)) {
+    opciones <- variables_opciones[[var]]
+    data <- expandir_opciones(data, var, opciones)
+    }
 
 # 3. Missings
 ## Todas las variables
