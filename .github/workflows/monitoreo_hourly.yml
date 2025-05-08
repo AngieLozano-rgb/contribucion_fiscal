@@ -15,11 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Descargar archivos LFS
+      - name: Pull LFS files
+        run: |
+          git lfs install
+          git lfs pull
+
       # Instalar dependencias del sistema operativo
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libfontconfig1-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libxml2-dev libharfbuzz-dev libfribidi-dev
+          sudo apt-get install -y libgdal-dev libgeos-dev libproj-dev libudunits2-dev # Dependencias para sf y tmap
 
       # Configurar R en el entorno
       - name: Set up R
@@ -32,6 +39,8 @@ jobs:
         run: |
           Rscript -e 'install.packages("pacman")'
           Rscript -e 'pacman::p_load(tidyverse, httr, jsonlite, googledrive, writexl, haven, stringr, labelled, lubridate, gtsummary, googlesheets4, kableExtra, skimr, tidygeocoder)'
+          Rscript -e 'install.packages(c("leafem", "leafgl", "sf", "stars", "tmaptools", "units"))'
+          Rscript -e 'pacman::p_load(tmap)'
 
       # Ejecutar scripts en orden
       - name: Run Script 0_Importar_datos
