@@ -15,6 +15,9 @@ load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
 # Poner Labels a las varnames y las respuestas ---------------------------------------------
 ## Asignación de val_labels para todas las variables ##
 
+data <- data %>%
+  select(-geometry)
+
 data$id_encuestador <- labelled(as.integer(data$id_encuestador), labels = c(
   `Carmen Mora` = 1,
   `Yonattan Mejías` = 2,
@@ -569,10 +572,6 @@ data$g1 <- labelled(as.integer(data$g1), labels = c(
 #    else if(length(x) > 1) paste(x, collapse = "; ")
 #    else as.character(x)
 #  })
-#}
-
-contribucion_fiscal_audit_dashboard <- contribucion_fiscal_audit_dashboard %>%
-  select(-geometry)
 
 contribucion_fiscal_audit_dashboard <- data %>% 
   labelled::to_factor() 
