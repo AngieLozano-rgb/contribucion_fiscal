@@ -38,7 +38,7 @@ data_hogar_labels_inv <- data_hogar_labels %>%
 #  count(fecha,nom_par,Nombre.del.mapa,id_encuestador, condicion, clasificacion_exceso, dist_min_m,ingreso_total, gasto_total)
 
 conteo_df <- data_hogar_labels_val %>%
-  count(nom_par, sec_anm)
+  count(fecha,id_encuestador,nom_par, sec_anm)
 
 #conteo_df_inv <- data_hogar_labels_inv %>%
 #  count(fecha,nom_par,Nombre.del.mapa,id_encuestador, condicion, clasificacion_exceso, dist_min_m, ingreso_total, gasto_total)
