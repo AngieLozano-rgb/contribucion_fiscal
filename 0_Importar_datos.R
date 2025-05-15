@@ -95,5 +95,4 @@ contrasena <- "KBaplo2023"
   write.csv(data, file = paste0(ruta, ".csv"), row.names = FALSE)
   
 # Limpieza del entorno 
-  
   rm(list = ls())

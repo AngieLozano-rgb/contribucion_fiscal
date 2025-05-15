@@ -12,76 +12,9 @@ p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven,
 load(paste0('2_Auditadas/contribucion_fiscal_audit_dashboard.RData'))
 load(paste0('2_Auditadas/contribucion_fiscal_audit_', Sys.Date(), '.RData'))
 
-# Sección A. Criterios de inclusión
-seccion_a <- c("a1","a2", "a3","a4","a5","a6")
 
-# Crear tabla descriptiva
-criterios_inclusion <- data_hogar_labels_val %>%
-  select(all_of(seccion_a)) %>%
-  tbl_summary(
-    by = NULL, # Sin desagregación
-    statistic = list(all_categorical() ~ "{n} ({p}%)", all_continuous() ~ "{mean} ± {sd}"),
-    missing = "ifany", # Muestra valores perdidos si existen
-    digits = all_continuous() ~ 1
-  ) %>%
-  modify_caption("**Tabla de Estadística Descriptiva**")
-
-criterios_inclusion
-
-## Sección B
-seccion_b <- c("b1", "b2", "b3", "b4", "b5", "b6", "b7")
-
-data_hogar <- data_hogar_labels_val %>%
-  mutate(across(all_of(seccion_b), ~ str_trim(.))) %>%  # Eliminar espacios en blanco
-  mutate(across(all_of(seccion_b), ~ as.numeric(.))) %>%  # Convertir a numérico
-  mutate(across(all_of(seccion_b), ~ replace_na(., 0)))  # Reemplazar NA con 0
-
-map(seccion_b, ~ summary(data_hogar[[.]]))
-
-# Crear un dataframe con los estadísticos resumidos de cada variable
-caracteristicas_hogar <- seccion_b %>%
-  map_df(~ {
-    stats <- summary(data_hogar[[.]])
-    tibble(
-      Variable = .,
-      Min = stats[1],
-      Q1 = stats[2],
-      Mediana = stats[3],
-      Media = stats[4],
-      Q3 = stats[5],
-      Max = stats[6]
-    )
-  })
-
-# Mostrar la tabla 
-caracteristicas_hogar %>%
-  gt() %>%
-  tab_header(title = "Resumen Estadístico de Variables del Hogar")
-
-# Funciones 
-
-detectar_outliers <- function(x) {
-  if (is.numeric(x)) {
-    Q1 <- quantile(x, 0.25, na.rm = TRUE)
-    Q3 <- quantile(x, 0.75, na.rm = TRUE)
-    IQR <- Q3 - Q1
-    limite_inferior <- Q1 - 1.5 * IQR
-    limite_superior <- Q3 + 1.5 * IQR
-    return(ifelse(x < limite_inferior | x > limite_superior, 1, 0))  # Convierte TRUE/FALSE a 1/0
-  } else {
-    return(rep(0, length(x)))  # Si la variable no es numérica, devuelve solo ceros
-  }
-}
-
-#data_labels <- contribucion_fiscal_audit_dashboard %>%
-#  filter(ale_invalida == 0 & distancia_categoria !="> 5 km")
-
-#table(data_labels$d1)
-
-data_labels <- contribucion_fiscal_audit_dashboard %>%
-  filter(ale_invalida == 0 & distancia_categoria !="> 5 km")
-
-seccion_c <- c("c1", "c2", "c3", "c4", "c5", "c6","c7","c8","c9")
+#
+seccion_c <- c("c1", "c2", "c3", "c4", "c5", "c6","c7","c9")
 
 # Crear tabla descriptiva
 caracterizacion <- data_labels %>%
@@ -95,7 +28,34 @@ caracterizacion <- data_labels %>%
   modify_caption("**Tabla de Estadística Descriptiva**")
 
 caracterizacion
+## 47% hombres y 53% mujeres
+## edad 36 años
+## 92% venezolanos
+## Estudios superiores 
 
+## revisar familias mixtas y solo venezolanas
+
+table(data_labels$c3)
+
+# nacionalidad y jefatura de hogar
+
+
+# Filtrar solo las columnas que corresponden a c9
+cols_c8 <- grep("^c8_", names(data_labels), value = TRUE)
+
+# Crear la tabla de frecuencias
+situacion_migratoria <- data_labels %>%
+  select(all_of(cols_c8)) %>%
+  summarise(across(everything(), \(x) sum(x, na.rm = TRUE))) %>%
+  pivot_longer(cols = everything(), names_to = "Opción", values_to = "Frecuencia") %>%
+  arrange(desc(Frecuencia))
+
+## Pasaporte venezolano vigente, 
+## Cédula de identidad ecuatoriana para extranjeros vigente,
+## Visa VIRTE (Vigente)
+## (47)  14no cuenta con ninguno
+
+ 
 seccion_d <- c("d1", "d2", "d3", "d4", "d5", "d6")
 
 # Crear tabla descriptiva
@@ -110,6 +70,36 @@ situacion_laboral <- data_labels %>%
   modify_caption("**Tabla de Estadística Descriptiva**")
 
 situacion_laboral
+
+seccion_ind <- c("ind2", "ind3", "ind6")
+
+situacion_laboral_ind <- data_labels %>%
+  select(all_of(seccion_ind)) %>%
+  tbl_summary(
+    by = NULL, # Sin desagregación
+    statistic = list(all_categorical() ~ "{n} ({p}%)", all_continuous() ~ "{mean} ± {sd}"),
+    missing = "ifany", # Muestra valores perdidos si existen
+    digits = all_continuous() ~ 1
+  ) %>%
+  modify_caption("**Tabla de Estadística Descriptiva**")
+
+situacion_laboral_ind
+
+seccion_dep <- c("dep1","dep2","dep4","dep5")
+
+situacion_laboral_dep <- data_labels %>%
+  select(all_of(seccion_dep)) %>%
+  tbl_summary(
+    by = NULL, # Sin desagregación
+    statistic = list(all_categorical() ~ "{n} ({p}%)", all_continuous() ~ "{mean} ± {sd}"),
+    missing = "ifany", # Muestra valores perdidos si existen
+    digits = all_continuous() ~ 1
+  ) %>%
+  modify_caption("**Tabla de Estadística Descriptiva**")
+
+situacion_laboral_dep
+
+## Ingresos
 
 valores_invalidos <- c(999, 9999, 99999, 999999, 888, 8888, 88888, 888888)
 
@@ -191,8 +181,6 @@ data %>%
 
 ## independientes
 ## ingresos - gastos del negocio
-
-
 ### Calculo IR dependientes
 # Calcular aportes al IESS (9.45% del ingreso bruto)
 
@@ -267,6 +255,3 @@ variables_gastos <- c("e_a1", "e_a2", "e_a3", "e_a4","e_b1", "e_b2", "e_b3",
                       "e_ah1","e_d1",
                       "mensual_e_s1","mensual_e_s2","mensual_e_o4","mensual_e_o5",
                       "mensual_e_r1_4")
-
-# todos los descriptivos de la encuesta
-# estimar el modelo de ingresos

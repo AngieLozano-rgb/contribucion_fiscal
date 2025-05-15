@@ -1,7 +1,6 @@
 # 1. Instalar librerias --------------------------------------------------------
 
 #install.packages("pacman")
-
 library(pacman)
 
 p_load(dplyr, gt, googledrive, gtsummary, googlesheets4, ggplot2,httr, haven, 
@@ -169,24 +168,6 @@ data$c7_1 <- labelled(as.integer(data$c7_1), labels = c(
   )
 )
 
-data$c8 <- labelled(as.integer(data$c8), labels = c(
-  `Pasaporte venezolano vigente` = 1,
-  `Pasaporte venezolano vencido` = 2,
-  `Cédula de identidad venezolana vigente` = 3,
-  `Cédula de identidad venezolana vencido` = 4,
-  `Cédula de identidad ecuatoriana para extranjeros vigente` = 5,
-  `Cédula de identidad ecuatoriana para extranjeros vencido` = 6,
-  `Carnet de Extranjería (Vigente)` = 7,
-  `Carnet de Extranjería (Vencido)` = 8,
-  `Visa VIRTE (Vencida)` = 9,
-  `Visa VIRTE (Vigente)` = 10,
-  `Visa Mercosur (PTP) (Vigente)` = 11,
-  `VIsa Mercosur (PTP) (Vencido)` = 12,
-  `No cuenta con ningún documento` = 14,
-  `Prefiere no responder` = 99
-  )
-)
-
 data$c9 <- labelled(as.integer(data$c9), labels = c(
   `Sí, a Venezuela` = 1,
   `Sí, a un país de Latinoamérica` = 2,
@@ -315,20 +296,6 @@ data$dep2 <- labelled(as.integer(data$dep2), labels = c(
   )
 )
 
-data$dep4 <- labelled(as.integer(data$dep4), labels = c(
-  `Bono de alimentación` = 1,
-  `Transporte` = 2,
-  `13er sueldo` = 3,
-  `14to sueldo` = 4,
-  `Utilidades` = 5,
-  `Bonificaciones o incentivos (bonos por desempeño, productividad, antigüedad, etc.).` = 6,
-  `Comisiones sobre ventas o producción` = 7,
-  `Horas extras pagadas` = 8,
-  `No cuenta con beneficios adicionales` = 9,
-  `Otro (especificar)` = 88
-  )
-)
-
 data$dep5 <- labelled(as.integer(data$dep5), labels = c(
   `Si, ya hice la declaración` = 1,
   `Si, pienso hacerlo` = 2,
@@ -346,15 +313,6 @@ data$gasto_alimentacion <- labelled(as.integer(data$gasto_alimentacion), labels 
 data$gasto_bebidas <- labelled(as.integer(data$gasto_bebidas), labels = c(
   `Sí` = 1,
   `No` = 2
-  )
-)
-
-data$e_t3 <- labelled(as.integer(data$e_t3), labels = c(
-  `Automóvil o camioneta` = 1,
-  `Motocicleta` = 2,
-  `Bicicleta` = 3,
-  `Ninguno` = 4,
-  `Otro medio de transporte` = 88
   )
 )
 
@@ -455,21 +413,6 @@ data$e_v11 <- labelled(as.integer(data$e_v11), labels = c(
   )
 )
 
-data$e_v13 <- labelled(as.integer(data$e_v13), labels = c(
-  `Servicio de teléfono convencional` = 1,
-  `Servicio de teléfono celular` = 2,
-  `Servicio de televisión pagada (cable/satelital, otra)` = 3,
-  `Servicio de internet fijo` = 4,
-  `Computadora (de escritorio o laptop)` = 5,
-  `Refrigeradora` = 6,
-  `Máquina lavadora de ropa` = 7,
-  `Máquina secadora de ropa` = 8,
-  `Horno microondas` = 9,
-  `Máquina extractora de olores` = 10,
-  `Ninguno` = 11
-  )
-)
-
 data$gasto_vivienda <- labelled(as.integer(data$gasto_vivienda), labels = c(
   `Sí` = 1,
   `No` = 2
@@ -498,20 +441,6 @@ data$e_r1_1 <- labelled(as.integer(data$e_r1_1), labels = c(
   )
 )
 
-data$e_r1_2 <- labelled(as.integer(data$e_r1_2), labels = c(
-  `Transferencia Bancaria (de un Banco ecuatoriano a uno venezolano)` = 1,
-  `Transferencia al exterior (a un Banco en otros países)` = 2,
-  `Agencia de Envíos o Casa de Cambios formal (MoneyGram, WesternUnion, Paypal, otros)` = 3,
-  `Agencia de Envíos o Casa de Cambios informal` = 4,
-  `Intercambio de divisas` = 5,
-  `Con criptomonedas (Bitcoin u otros)` = 6,
-  `Con una persona independiente` = 7,
-  `Con un conocido o familiar` = 8,
-  `Grupos en redes sociales` = 9,
-  `Otro (especificar)` = 88
-  )
-)
-
 data$e_r1_3 <- labelled(as.integer(data$e_r1_3), labels = c(
   `Semanalmente` = 1,
   `Quincenalmente` = 2,
@@ -523,7 +452,72 @@ data$e_r1_3 <- labelled(as.integer(data$e_r1_3), labels = c(
   )
 )
 
-data$g1 <- labelled(as.integer(data$g1), labels = c(
+# Definir los labels correspondientes
+labels_c8 <- c(
+  `Pasaporte venezolano vigente` = 1,
+  `Pasaporte venezolano vencido` = 2,
+  `Cédula de identidad venezolana vigente` = 3,
+  `Cédula de identidad venezolana vencido` = 4,
+  `Cédula de identidad ecuatoriana para extranjeros vigente` = 5,
+  `Cédula de identidad ecuatoriana para extranjeros vencido` = 6,
+  `Carnet de Extranjería (Vigente)` = 7,
+  `Carnet de Extranjería (Vencido)` = 8,
+  `Visa VIRTE (Vencida)` = 9,
+  `Visa VIRTE (Vigente)` = 10,
+  `Visa Mercosur (PTP) (Vigente)` = 11,
+  `Visa Mercosur (PTP) (Vencido)` = 12,
+  `No cuenta con ningún documento` = 14,
+  `Prefiere no responder` = 99)
+
+labels_dep4 <- c(
+  `Bono de alimentación` = 1,
+  `Transporte` = 2,
+  `13er sueldo` = 3,
+  `14to sueldo` = 4,
+  `Utilidades` = 5,
+  `Bonificaciones o incentivos (bonos por desempeño, productividad, antigüedad, etc.).` = 6,
+  `Comisiones sobre ventas o producción` = 7,
+  `Horas extras pagadas` = 8,
+  `No cuenta con beneficios adicionales` = 9,
+  `Otro (especificar)` = 88
+  )
+
+labels_e_t3 <- c(
+  `Automóvil o camioneta` = 1, 
+  `Motocicleta`  = 2,
+  `Bicicleta`  = 3,
+  `Ninguno`  = 4,
+  `Otro medio de transporte`= 88
+  )
+  
+labels_e_v13 <- c(
+  `Servicio de teléfono convencional` = 1,
+  `Servicio de teléfono celular` = 2,
+  `Servicio de televisión pagada (cable/satelital, otra)` = 3,
+  `Servicio de internet fijo` = 4,
+  `Computadora (de escritorio o laptop)` = 5,
+  `Refrigeradora` = 6,
+  `Máquina lavadora de ropa` = 7,
+  `Máquina secadora de ropa` = 8,
+  `Horno microondas` = 9,
+  `Máquina extractora de olores` = 10,
+  `Ninguno` = 11
+  )
+
+labels_e_r1_2 <- c(
+  `Transferencia Bancaria (de un Banco ecuatoriano a uno venezolano)` = 1,
+  `Transferencia al exterior (a un Banco en otros países)` = 2,
+  `Agencia de Envíos o Casa de Cambios formal (MoneyGram, WesternUnion, Paypal, otros)` = 3,
+  `Agencia de Envíos o Casa de Cambios informal` = 4,
+  `Intercambio de divisas` = 5,
+  `Con criptomonedas (Bitcoin u otros)` = 6,
+  `Con una persona independiente` = 7,
+  `Con un conocido o familiar` = 8,
+  `Grupos en redes sociales` = 9,
+  `Otro (especificar)` = 88
+  )
+
+labels_g1 <- c(
   `Cuenta de ahorros` = 1,
   `Cuenta corriente` = 2,
   `Cuenta a plazo fijo` = 3,
@@ -538,45 +532,141 @@ data$g1 <- labelled(as.integer(data$g1), labels = c(
   `No tienen ningún producto financiero` = 12,
   `Otro (especificar)` = 88
   )
-)
+
+# Asignar labels a las columnas binarias generadas
+for (label in names(labels_c8)) {
+  opcion <- labels_c8[[label]]
+  col_name <- paste0("c8/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_dep4)) {
+  opcion <- labels_dep4[[label]]
+  col_name <- paste0("dep4/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_e_t3)) {
+  opcion <- labels_e_t3[[label]]
+  col_name <- paste0("e_t3/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_e_t3)) {
+  opcion <- labels_e_t3[[label]]
+  col_name <- paste0("e_t3/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_e_v13)) {
+  opcion <- labels_e_v13[[label]]
+  col_name <- paste0("e_v13/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_e_r1_2)) {
+  opcion <- labels_e_r1_2[[label]]
+  col_name <- paste0("e_r1_2/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+for (label in names(labels_g1)) {
+  opcion <- labels_g1[[label]]
+  col_name <- paste0("g1/", opcion)
+  
+  if (col_name %in% names(data)) {
+    var_label(data[[col_name]]) <- label
+  }
+}
+
+#------------------------------------------------------------------------------#
 
 # Leer el archivo Excel de etiquetas
-#labels <- read_excel("C:/Users/ASUS/Documents/Trabajo/Impacto ecuador/labels.xlsx", sheet = "Labels")   # hoja con preguntas y etiquetas
+labels <- read_excel("C:/Users/equip/Downloads/labels.xlsx", sheet = "Labels")   # hoja con preguntas y etiquetas
+
 # Asignar etiquetas a las preguntas y respuestas
-#for (i in seq_len(nrow(labels))) {
-#  var_name <- labels$name[i]
-#  var_label <- labels$label[i]
+
+for (i in seq_len(nrow(labels))) {
+  var_name <- labels$name[i]
+  var_label <- labels$label[i]
   
   # Asignar etiquetas a las preguntas
-#  if (var_name %in% names(data)) {
-#    var_label(data[[var_name]]) <- var_label
-#  }
-#}
+  if (var_name %in% names(data)) {
+    var_label(data[[var_name]]) <- var_label
+  }
+}
 
 # Reemplazar caracteres ilegales en los nombres de las columnas
-#colnames(data) <- gsub("[^[:alnum:]_]", "_", colnames(data))
-
-# Verifica los nombres de las columnas después de la modificación
-#print(colnames(data))
+colnames(data) <- gsub("[^[:alnum:]_]", "_", colnames(data))
 
 # Identificar columnas que son listas
-#list_columns <- sapply(data, is.list)
+list_columns <- sapply(data, is.list)
 
 # Mostrar nombres de columnas problemáticas
-#names(data)[list_columns]
+names(data)[list_columns]
 
 # Convertir las columnas de lista a character (o otro tipo adecuado)
-#for(col in names(data)[list_columns]) {
-#  data[[col]] <- sapply(data[[col]], function(x) {
-#    if(length(x) == 0) NA_character_
-#    else if(length(x) > 1) paste(x, collapse = "; ")
-#    else as.character(x)
-#  })
+
+for(col in names(data)[list_columns]) {
+  data[[col]] <- sapply(data[[col]], function(x) {
+    if(length(x) == 0) NA_character_
+    else if(length(x) > 1) paste(x, collapse = "; ")
+    else as.character(x)
+  })}
+
+which(names(data) == "dep4_1")
+
+# Renombrar usando posiciones específicas
+names(data)[129] <- "dep4_1e"
 
 contribucion_fiscal_audit_dashboard <- data %>% 
   labelled::to_factor() 
 
-# Dashboard ---------------------------------------------------------------
+#------------------------------------------------------------------------------#
+
+# Guardar con labels y etiquetas
+
+ruta <- paste0("2_Auditadas/contribucion_fiscal_audit_dashboard")
+
+## Excel
+write_xlsx(contribucion_fiscal_audit_dashboard, path = paste0(ruta, ".xlsx"), col_names = TRUE)
+
+## RData
+save(contribucion_fiscal_audit_dashboard, file = paste0(ruta, ".RData"))
+
+#------------------------------------------------------------------------------#
+
+# Guardar con labels
+
+ruta <- paste0("2_Auditadas/data")
+
+## Excel
+write_xlsx(data, path = paste0(ruta, ".xlsx"), col_names = TRUE)
+
+## RData
+save(data, file = paste0(ruta, ".RData"))
+
+#------------------------------------------------------------------------------#
+
+# Dashboard 
 
 # Autenticación
 gs4_auth(email = 'alozano@equilibriumbdc.com', cache = 'secrets')
@@ -591,16 +681,7 @@ sheet_write(
   sheet = 'Hoja 1'
 )
 
+#------------------------------------------------------------------------------#
 
-# Guardar en múltiples formatos ---------------------------------------------
-
-ruta <- paste0("2_Auditadas/contribucion_fiscal_audit_dashboard")
-
-## Excel
-write_xlsx(contribucion_fiscal_audit_dashboard, path = paste0(ruta, ".xlsx"), col_names = TRUE)
-
-## RData
-save(contribucion_fiscal_audit_dashboard, file = paste0(ruta, ".RData"))
-
-# Limpieza del entorno ----------------------------------------------------------
+# Limpieza del entorno
 rm(list = ls())

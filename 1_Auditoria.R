@@ -30,39 +30,59 @@ data <- data %>%
            a5 != 1 & 
            a6 == 1)
 
+
 # Lista de variables y sus respectivas opciones
 
-  variables_opciones <- list(
-    c8 = 1:14,
-    dep4 = 1:9,
-    e_t3 = 1:4,
-    e_v13 = 1:11 ,
-    e_r1_2 = 1:9 ,
-    g1 = 1:12
-  )
+variables_opciones <- list(
+  c8 = 1:14,
+  dep4 = 1:9,
+  e_t3 = 1:4,
+  e_v13 = 1:11,
+  e_r1_2 = 1:9,
+  g1 = 1:12
+)
 
 # Función para expandir opciones de respuesta
-  expandir_opciones <- function(data, var, opciones) {
-    # Convertir las respuestas en una lista separada por espacios
-    data <- data %>%
-      mutate(across(all_of(var), ~ str_split(.x, " "), .names = "split_{col}"))
-      # Crear las nuevas columnas (dep4/1, dep4/2, ...) con valor 1 si la opción fue seleccionada
-      for (i in opciones) {
-      data <- data %>%
-      mutate(!!paste0(var, "/", i) := if_else(str_detect(paste(data[[paste0("split_", var)]]), as.character(i)), 1, 0))
-      }
-      # Eliminar la columna auxiliar "split_{var}"
-      data <- data %>% select(-contains("split_"))
-    return(data)
+expandir_opciones <- function(data, var, opciones) {
+  
+  # Definimos las opciones adicionales según el caso
+  if (var == "c8") {
+    opciones <- c(opciones, 99) # Solo se añade 99
+  } else if (var != "e_v13") {
+    opciones <- c(opciones, 88) # En todas excepto e_v13, se añade 88
   }
+  
+  # Convertir las respuestas en una lista separada por espacios
+  data <- data %>%
+    mutate(across(all_of(var), ~ str_split(.x, " "), .names = "split_{col}"))
+  
+  # Crear las nuevas columnas con valor 1 si la opción fue seleccionada
+  for (i in opciones) {
+    data <- data %>%
+      mutate(!!paste0(var, "/", i) := if_else(str_detect(paste(data[[paste0("split_", var)]]), as.character(i)), 1, 0))
+  }
+  
+  # Eliminar la columna auxiliar
+  data <- data %>% select(-contains("split_"))
+  
+  return(data)
+}
+
+# Filtramos las columnas de respuesta para que solo trabajemos con ellas
+data_respuestas <- data %>%
+  select(names(variables_opciones))
 
 # Aplicamos la función a cada variable
-  for (var in names(variables_opciones)) {
-    opciones <- variables_opciones[[var]]
-    data <- expandir_opciones(data, var, opciones)
-    }
+for (var in names(variables_opciones)) {
+  opciones <- variables_opciones[[var]]
+  data_respuestas <- expandir_opciones(data_respuestas, var, opciones)
+}
+
+# Unimos los datos procesados con las columnas originales que no procesamos
+data <- bind_cols(select(data, -names(variables_opciones)), data_respuestas)
 
 # 3. Missings
+  
 ## Todas las variables
 variables <- c("b1", "b2", "b3", "b4", "b5", "b6", "b7", 
                "c1", "c2", "c3", "c5", "c6", 
@@ -235,7 +255,6 @@ data <- data %>%
     total_vivienda = as.numeric(as.character(total_vivienda)),
     total_gastos_mensuales = as.numeric(as.character(total_gastos_mensuales)),)
 
-
 data <- data %>%
   mutate(across(
     all_of(c(cols_a, cols_b, cols_t, cols_v, cols_otros)),
@@ -352,10 +371,49 @@ data <- data %>%
 
 #table(data$ale_incongruencias_tot)
 
+# Alertas tipo de hogar
+# Agrupación y conteo de personas por nacionalidad
+data_nacionalidades <- data %>%
+  group_by(encuesta_id) %>%
+  summarise(
+    total_venezolanos = sum(c3 == 1, na.rm = TRUE),
+    total_ecuatorianos = sum(c3 == 2, na.rm = TRUE),
+    total_otras = sum(c3 == 88, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Definición de los tipos de hogar
+data_nacionalidades <- data_nacionalidades %>%
+  mutate(
+    tipo_hogar = case_when(
+      total_venezolanos > 0 & total_ecuatorianos == 0 & total_otras == 0 ~ 1,  # Solo venezolanos
+      total_venezolanos == 0 & total_ecuatorianos > 0 & total_otras == 0 ~ 2,  # Solo ecuatorianos
+      total_venezolanos > 0 & total_ecuatorianos > 0 & total_otras == 0 ~ 3,   # Mixto (venezolanos + ecuatorianos)
+      total_venezolanos == 0 & total_ecuatorianos == 0 & total_otras > 0 ~ 4,  # Solo otras nacionalidades
+      total_venezolanos > 0 & total_ecuatorianos == 0 & total_otras > 0 ~ 5,   # Mixto (venezolanos + otras)
+      total_venezolanos > 0 & total_ecuatorianos > 0 & total_otras > 0 ~ 6,    # Mixto (venezolanos + ecuatorianos + otros)
+      total_venezolanos == 0 & total_ecuatorianos > 0 & total_otras > 0 ~ 7    # Mixto (ecuatorianos + otras)
+    ),
+    tipo_hogar = factor(tipo_hogar, levels = 1:7, labels = c(
+      "Solo venezolanos", 
+      "Solo ecuatorianos", 
+      "Mixto (venezolanos + ecuatorianos)",
+      "Solo otras nacionalidades", 
+      "Mixto (venezolanos + otras)", 
+      "Mixto (venezolanos + ecuatorianos + otros)", 
+      "Mixto (ecuatorianos + otras)"
+    ))
+  )
+
+table(data_nacionalidades$tipo_hogar)
+
+data <- data %>%
+  left_join(data_nacionalidades, by = "encuesta_id")
+
 valores_invalidos <- c(999, 9999, 99999, 999999, 888, 8888, 88888, 888888)
 
 data_hogar <- data %>%
-  group_by(instanceID) %>%
+  group_by(encuesta_id) %>%
   mutate(
     # Ingreso ind4: si todos son inválidos, poner 0; si hay válidos, sumarlos
     ingreso_ind4 = if (all(ind4 %in% valores_invalidos | is.na(ind4))) {
@@ -515,17 +573,21 @@ data_hogar <- as.data.frame(data_hogar)
 # 2. Identificar las variables nuevas que tiene data_hogar y que no están en data
 nuevas_vars <- setdiff(names(data_hogar), names(data))
 
-# 3. Agregar instanceID para poder hacer el join
-nuevas_vars <- c("instanceID", nuevas_vars)
+# 3. Agregar encuesta_id para poder hacer el join
+nuevas_vars <- c("encuesta_id", nuevas_vars)
 
 # 4. Hacer el join solo con esas variables
-data <- left_join(data, select(data_hogar, all_of(nuevas_vars)), by = "instanceID")
+data <- left_join(data, select(data_hogar, all_of(nuevas_vars)), by = "encuesta_id")
 
 # Encuestas invalidas
 
 data <- data %>%
   mutate(ale_invalida = if_else(
-    clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)", "No disponible"),1, 0
+    clasificacion_exceso %in% c("Grave (100–500%)", "Extremo (>500%)", "No disponible") |
+      distancia_categoria == "> 5 km" |
+      duration_minutes < 15 |
+      tipo_hogar == "Solo ecuatorianos", 
+    1, 0
   ))
 
 #Guardar en múltiples formatos ---------------------------------------------
